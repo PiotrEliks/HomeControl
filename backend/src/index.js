@@ -6,7 +6,7 @@ import cors from 'cors';
 import path from "path";
 
 dotenv.config();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;
 const __dirname = path.resolve();
 
 const app = express();
@@ -72,6 +72,6 @@ wss.on('connection', function connection(ws) {
   });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log("Server is running on port:", PORT);
 });
