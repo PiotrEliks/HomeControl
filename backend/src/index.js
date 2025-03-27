@@ -3,8 +3,11 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
+import path from "path";
+
 dotenv.config();
 const PORT = process.env.PORT;
+const __dirname = path.resolve();
 
 const app = express();
 app.use(express.json());
