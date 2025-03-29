@@ -3,8 +3,11 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import path from 'path';
+import cookieParser from "cookie-parser";
 import { initSocket } from './lib/socket.js';
+import authRoutes from './routes/auth.route.js';
 import ledRoutes from './routes/led.route.js';
+import { connectDB } from './lib/db.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 5001;
@@ -12,6 +15,7 @@ const __dirname = path.resolve();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors());
 
 if (process.env.NODE_ENV === "production") {
@@ -21,6 +25,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
+app.use('/api/auth', authRoutes);
 app.use('/api/led', ledRoutes);
 
 const server = http.createServer(app);
@@ -29,4 +34,5 @@ initSocket(server);
 
 server.listen(PORT, () => {
   console.log("Server is running on port:", PORT);
+  connectDB();
 });
