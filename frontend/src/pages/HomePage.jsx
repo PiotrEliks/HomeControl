@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { LogOut } from 'lucide-react';
+import LedSwitch from '../components/LedSwitch.jsx';
 
 const HomePage = () => {
   const { authUser, logout } = useAuthStore();
@@ -9,7 +10,7 @@ const HomePage = () => {
   const renderContent = () => {
     switch(activeMenu) {
       case 'Dashboard':
-        return <div>Dashboard Content</div>;
+        return <LedSwitch />;
       case 'Settings':
         return <div>Settings Content</div>;
       case 'Reports':
