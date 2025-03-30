@@ -15,7 +15,9 @@ function App() {
 
   if (isCheckingAuth && !authUser) {
     return (
-      <LoaderCircle />
+      <div className="h-screen w-full bg-gradient-to-r from-lime-600 to-green-900 flex items-center justify-center">
+        <LoaderCircle className="animate-spin text-white size-10"/>
+      </div>
     );
   }
 

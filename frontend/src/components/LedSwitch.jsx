@@ -7,14 +7,14 @@ const LedSwitch = () => {
 
   useEffect(() => {
     getLedState();
-  }, [getLedState, setLedOn, setLedOff]);
+  }, [getLedState, ledState]);
 
   console.log(ledState)
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center">
-      <div>
-        Stan: {isGettingLedState ? <LoaderCircle /> : ledState ? 'LED włączony' : 'LED wyłączony'} {console.log(ledState)}
+      <div className="flex flex-row items-center justify-center gap-2">
+        Stan: {isGettingLedState ? <LoaderCircle className="size-5"/> : ledState ? 'LED włączony' : 'LED wyłączony'} {console.log(ledState)}
       </div>
       <div className="flex flex-row justify-center items-cetner gap-2">
         <button className="bg-green-800 text-white p-2 rounded-xl cursor-pointer hover:bg-green-800/80" onClick={() => {setLedOn()}} disabled={isChangingLedState || ledState}>
