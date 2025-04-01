@@ -23,23 +23,25 @@ export const useLedStore = create((set, get) => ({
     set({ isChangingLedState: true });
     try {
       const res = await axiosInstance.post("/led/on");
+      set({ ledState: res.data.led });
       toast.success("Włączono LED");
     } catch (error) {
       toast.error(error.response.data.error);
     } finally {
-      set({ isChangingLedState: true });
+      set({ isChangingLedState: false });
     }
   },
 
   setLedOff: async () => {
     set({ isChangingLedState: true });
     try {
-      await axiosInstance.post("/led/off");
+      const res = await axiosInstance.post("/led/off");
+      set({ ledState: res.data.led });
       toast.success("Wyłączono LED");
     } catch (error) {
       toast.error(error.response.data.error);
     } finally {
-      set({ isChangingLedState: true });
+      set({ isChangingLedState: false });
     }
   },
 

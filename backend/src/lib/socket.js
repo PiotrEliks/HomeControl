@@ -41,6 +41,7 @@ function initSocket(server) {
     socket.on("update", (data) => {
       if (data.state !== undefined) {
         ledState = data.state;
+        console.log("update", ledState)
         frontendSockets.forEach((client) => {
           if (client.connected) {
             client.emit("state", { state: ledState });

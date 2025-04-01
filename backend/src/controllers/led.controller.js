@@ -5,7 +5,15 @@ export const turnLedOn = async (req, res) => {
         const deviceSocket = getDeviceSocket();
         if (deviceSocket) {
             deviceSocket.emit("command", { command: "on" });
-            return res.status(200).json({ message: "Polecenie włączenia wysłane" });
+            const newState = await new Promise((resolve, reject) => {
+                deviceSocket.once("update", (data) => {
+                  resolve(data.state);
+                });
+                setTimeout(() => {
+                  reject(new Error("Timeout waiting for LED update"));
+                }, 5000);
+              });
+            return res.status(200).json({ message: "Polecenie włączenia wysłane", led: newState });
         } else {
             return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
         }
@@ -20,7 +28,15 @@ export const turnLedOff = async (req, res) => {
         const deviceSocket = getDeviceSocket();
         if (deviceSocket) {
           deviceSocket.emit("command", { command: "off" });
-          return res.status(200).json({ message: "Polecenie wyłączenia wysłane" });
+          const newState = await new Promise((resolve, reject) => {
+            deviceSocket.once("update", (data) => {
+              resolve(data.state);
+            });
+            setTimeout(() => {
+              reject(new Error("Timeout waiting for LED update"));
+            }, 5000);
+          });
+          return res.status(200).json({ message: "Polecenie wyłączenia wysłane", led: newState });
         } else {
           return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
         }
