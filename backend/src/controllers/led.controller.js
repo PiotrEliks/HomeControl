@@ -1,4 +1,6 @@
 import { getDeviceSocket, getLedState } from '../lib/socket.js';
+import { setLedCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
+import Schedule from '../models/schedule.model.js';
 
 export const turnLedOn = async (req, res) => {
     try {
@@ -50,4 +52,53 @@ export const getLedStateController = (req, res) => {
     const ledState = getLedState();
     console.log(ledState);
     return res.status(200).json({ led: ledState });
+};
+
+export const createLedSchedule = async (req, res) => {
+    try {
+        const { days, hour, minute, type } = req.body;
+        if (!days || !hour || !minute || !type) {
+            return res.status(400).json({ message: 'Brak wymaganych danych' });
+        }
+
+        const cronExpression = `${minute} ${hour} * * ${days.join(',')}`;
+        const cronJobId = `job-${Date.now()}`;
+        await saveScheduleToDB(days, hour, minute, cronExpression, cronJobId, type);
+        setLedCronSchedule(cronExpression, cronJobId, type);
+        return res.status(200).json({ message: 'Harmonogram został ustawiony' });
+    } catch (error) {
+        console.error("Error creating schedule:", error);
+        return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
+    }
+};
+
+export const getLedSchedules = async (req, res) => {
+    try {
+        const schedules = await Schedule.findAll();
+        return res.status(200).json(schedules);
+    } catch (error) {
+        console.error('Błąd przy pobieraniu harmonogramów:', error);
+        return res.status(500).json({ message: 'Błąd przy pobieraniu harmonogramów' });
+    }
+};
+
+export const deleteLedSchedule = async (req, res) => {
+    try {
+        const { cronJobId } = req.body;
+        if (!cronJobId) {
+            return res.status(400).json({ message: 'Brak ID zadania' });
+        }
+        deleteCronTask(cronJobId);
+        await Schedule.destroy({
+            where: {
+                cronJobId: cronJobId,
+            }
+        });
+
+        const schedules = await Schedule.findAll()
+        return res.status(200).json(schedules);
+    } catch (error) {
+        console.error('Błąd przy pobieraniu harmonogramów:', error);
+        return res.status(500).json({ message: 'Błąd przy pobieraniu harmonogramów' });
+    }
 };

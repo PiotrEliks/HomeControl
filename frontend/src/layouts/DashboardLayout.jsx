@@ -153,19 +153,25 @@ const DashboardLayout = () => {
               {openGarden && (
                 <ul className="pl-4">
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('switch'); setMobileSidebarOpen(false); }}
                   >
                     On/Off
                   </li>
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('schedule'); setMobileSidebarOpen(false); }}
                   >
                     Harmonogram
                   </li>
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('garden-statistics'); setMobileSidebarOpen(false); }}
                   >
                     Statystyki
@@ -185,19 +191,25 @@ const DashboardLayout = () => {
               {openHome && (
                 <ul className="pl-4">
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('lights'); setMobileSidebarOpen(false); }}
                   >
                     Światła
                   </li>
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('doors'); setMobileSidebarOpen(false); }}
                   >
                     Drzwi
                   </li>
                   <li
-                    className="p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1"
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      }`}
                     onClick={() => { handleNavigation('home-statistics'); setMobileSidebarOpen(false); }}
                   >
                     Statystyki

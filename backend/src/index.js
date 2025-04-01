@@ -8,6 +8,7 @@ import { initSocket } from './lib/socket.js';
 import authRoutes from './routes/auth.route.js';
 import ledRoutes from './routes/led.route.js';
 import { connectDB } from './lib/db.js';
+import { loadSchedulesFromDB } from './lib/cronTasks.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 5001;
@@ -41,4 +42,5 @@ initSocket(server);
 server.listen(PORT, () => {
   console.log("Server is running on port:", PORT);
   connectDB();
+  loadSchedulesFromDB();
 });
