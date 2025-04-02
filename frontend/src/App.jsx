@@ -39,7 +39,7 @@ function App() {
           path="/"
           element={authUser ? <DashboardLayout /> : <Navigate to="/login" />}
         >
-          <Route index element={<SwitchPage />} />
+          <Route index element={<GardenStatisticsPage />} />
           <Route path="switch" element={<SwitchPage />} />
           <Route path="schedule" element={<SchedulePage />} />
           <Route path="garden-statistics" element={<GardenStatisticsPage />} />

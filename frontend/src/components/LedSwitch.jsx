@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useLedStore } from '../store/useLedStore.js';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Power, PowerOff } from 'lucide-react';
 
 const LedSwitch = () => {
   const { ledState, getLedState, setLedOn, setLedOff, isGettingLedState, isChangingLedState } = useLedStore();
@@ -12,7 +12,7 @@ const LedSwitch = () => {
   return (
     <div className="w-full h-full flex flex-col justify-center items-center">
       <div className="flex flex-row items-center justify-center gap-2 mb-5 text-xl">
-        Aktualny stan LED: <span className="font-bold">{isGettingLedState ? <LoaderCircle className="size-5"/> : ledState ? 'WŁĄCZONY' : 'WYŁĄCZONY'}</span>
+        Aktualny stan LED: <span>{isGettingLedState ? <LoaderCircle className="size-5"/> : ledState ? <span className="flex flex-row items-center gap-1 text-green-600"><Power className="text-green-600 size-5"/> WŁĄCZONY</span> : <span className="flex flex-row items-center gap-1 text-red-800"><PowerOff className="text-red-800 size-5"/> WYŁĄCZONY</span>}</span>
       </div>
       <div className="flex flex-row justify-center items-cetner gap-2">
         <button

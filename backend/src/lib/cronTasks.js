@@ -52,7 +52,7 @@ export const deleteCronTask = (cronJobId) => {
   }
 };
 
-export const saveScheduleToDB = async (days, hour, minute, cronExpression, cronJobId, type) => {
+export const saveScheduleToDB = async (days, hour, minute, cronExpression, cronJobId, type, createdBy) => {
   try {
       const schedule = await Schedule.create({
           days,
@@ -60,7 +60,8 @@ export const saveScheduleToDB = async (days, hour, minute, cronExpression, cronJ
           minute,
           cronExpression,
           cronJobId,
-          type
+          type,
+          createdBy
       });
       console.log('Harmonogram zapisany w bazie danych');
       return schedule;

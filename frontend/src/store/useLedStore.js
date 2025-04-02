@@ -49,10 +49,16 @@ export const useLedStore = create((set, get) => ({
     }
   },
 
-  createLedSchedule: async () => {
+  createLedSchedule: async (days, hour, minute, createdBy, type) => {
     set({ isCreatingLedSchedule: true });
     try {
-      const res = await axiosInstance.post("/led/schedule");
+      const res = await axiosInstance.post("/led/schedule", {
+        days,
+        hour,
+        minute,
+        type,
+        createdBy
+      });
       set({ schedules: res.data });
       toast.success("Ustawiono harmonogram");
     } catch (error) {

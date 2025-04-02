@@ -56,14 +56,14 @@ export const getLedStateController = (req, res) => {
 
 export const createLedSchedule = async (req, res) => {
     try {
-        const { days, hour, minute, type } = req.body;
+        const { days, hour, minute, createdBy, type } = req.body;
         if (!days || !hour || !minute || !type) {
             return res.status(400).json({ message: 'Brak wymaganych danych' });
         }
 
         const cronExpression = `${minute} ${hour} * * ${days.join(',')}`;
         const cronJobId = `job-${Date.now()}`;
-        await saveScheduleToDB(days, hour, minute, cronExpression, cronJobId, type);
+        await saveScheduleToDB(days, hour, minute, cronExpression, cronJobId, type, createdBy);
         setLedCronSchedule(cronExpression, cronJobId, type);
         const schedules = await Schedule.findAll()
         return res.status(200).json(schedules);

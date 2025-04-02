@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
-import { LogOut, Trees, House, Menu, X, CircleUser } from 'lucide-react';
+import { LogOut, Trees, House, Menu, X, CircleUser, CalendarDays, Power, ChartNoAxesCombined, Lightbulb, DoorClosed } from 'lucide-react';
 
 const DashboardLayout = () => {
   const { authUser, logout } = useAuthStore();
@@ -58,28 +58,28 @@ const DashboardLayout = () => {
               {openGarden && !sidebarCollapsed && (
                 <ul className="pl-4">
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/switch' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('switch')}
                   >
-                    On/Off
+                    <Power className="size-5"/>On/Off
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/schedule' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('schedule')}
                   >
-                    Harmonogram
+                    <CalendarDays className="size-5"/>Harmonogram
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('garden-statistics')}
                   >
-                    Statystyki
+                    <ChartNoAxesCombined className="size-5"/> Statystyki
                   </li>
                 </ul>
               )}
@@ -98,28 +98,28 @@ const DashboardLayout = () => {
               {openHome && !sidebarCollapsed && (
                 <ul className="pl-4">
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/lights' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('lights')}
                   >
-                    Światła
+                    <Lightbulb className="size-5"/>Światła
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/doors' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('doors')}
                   >
-                    Drzwi
+                    <DoorClosed className="size-5"/>Drzwi
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => handleNavigation('home-statistics')}
                   >
-                    Statystyki
+                    <ChartNoAxesCombined className="size-5"/>Statystyki
                   </li>
                 </ul>
               )}
@@ -153,28 +153,28 @@ const DashboardLayout = () => {
               {openGarden && (
                 <ul className="pl-4">
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/switch' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('switch'); setMobileSidebarOpen(false); }}
                   >
-                    On/Off
+                    <Power className="size-5"/>On/Off
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/schedule' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('schedule'); setMobileSidebarOpen(false); }}
                   >
-                    Harmonogram
+                    <CalendarDays className="size-5"/>Harmonogram
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('garden-statistics'); setMobileSidebarOpen(false); }}
                   >
-                    Statystyki
+                    <ChartNoAxesCombined className="size-5"/>Statystyki
                   </li>
                 </ul>
               )}
@@ -191,28 +191,28 @@ const DashboardLayout = () => {
               {openHome && (
                 <ul className="pl-4">
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/lights' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('lights'); setMobileSidebarOpen(false); }}
                   >
-                    Światła
+                    <Lightbulb className="size-5"/>Światła
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/doors' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('doors'); setMobileSidebarOpen(false); }}
                   >
-                    Drzwi
+                    <DoorClosed className="size-5"/>Drzwi
                   </li>
                   <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
+                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
                       location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('home-statistics'); setMobileSidebarOpen(false); }}
                   >
-                    Statystyki
+                    <ChartNoAxesCombined className="size-5"/>Statystyki
                   </li>
                 </ul>
               )}

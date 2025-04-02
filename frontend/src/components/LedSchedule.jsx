@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useLedStore } from '../store/useLedStore.js';
 import { Trash2 } from 'lucide-react';
+import NewScheduleForm from './NewScheduleForm.jsx';
 
 const LedSchedule = () => {
   const { schedules, createLedSchedule, deleteLedSchedule, getLedSchedules } = useLedStore();
@@ -51,7 +52,10 @@ const LedSchedule = () => {
   console.log(scheduleToDelete)
 
   return (
-    <div>
+    <div className="w-full">
+      <div className="w-full">
+        <NewScheduleForm />
+      </div>
       <div className="grid grid-cols-5 gap-2 font-bold text-sm border-b pb-2 text-center items-center">
         <div>Dni</div>
         <div>Czas</div>
@@ -69,7 +73,7 @@ const LedSchedule = () => {
               className="flex flex-row items-center gap-1 bg-red-700 text-white rounded-xl px-2 py-0.5 hover:bg-red-700/70 cursor-pointer"
               onClick={() => {handleShowDeleteConfirmationWindow(schedule)}}
             >
-              <Trash2 /> Usuń
+              <Trash2 className="size-5"/> Usuń
             </button>
           </div>
         </div>
