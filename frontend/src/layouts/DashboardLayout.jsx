@@ -144,11 +144,11 @@ const DashboardLayout = () => {
             <li>
               <button
                 onClick={() => setOpenGarden(!openGarden)}
-                className={`w-full text-left p-2 mb-1 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer ${
+                className={`w-full text-left p-2 mb-1 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer flex flex-row items-center gap-1 ${
                   openGarden ? 'bg-green-700/80' : ''
                 }`}
               >
-                Ogród
+                <Trees />Ogród
               </button>
               {openGarden && (
                 <ul className="pl-4">
@@ -162,7 +162,7 @@ const DashboardLayout = () => {
                   </li>
                   <li
                     className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      location.pathname === '/schedule' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('schedule'); setMobileSidebarOpen(false); }}
                   >
@@ -170,7 +170,7 @@ const DashboardLayout = () => {
                   </li>
                   <li
                     className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('garden-statistics'); setMobileSidebarOpen(false); }}
                   >
@@ -182,17 +182,17 @@ const DashboardLayout = () => {
             <li>
               <button
                 onClick={() => setOpenHome(!openHome)}
-                className={`w-full text-left p-2 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer ${
+                className={`w-full text-left p-2 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer flex flex-row items-center gap-1 ${
                   openHome ? 'bg-green-700/80' : ''
                 }`}
               >
-                Dom
+                <House />Dom
               </button>
               {openHome && (
                 <ul className="pl-4">
                   <li
                     className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      location.pathname === '/lights' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('lights'); setMobileSidebarOpen(false); }}
                   >
@@ -200,7 +200,7 @@ const DashboardLayout = () => {
                   </li>
                   <li
                     className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      location.pathname === '/doors' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('doors'); setMobileSidebarOpen(false); }}
                   >
@@ -208,7 +208,7 @@ const DashboardLayout = () => {
                   </li>
                   <li
                     className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
+                      location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''
                       }`}
                     onClick={() => { handleNavigation('home-statistics'); setMobileSidebarOpen(false); }}
                   >

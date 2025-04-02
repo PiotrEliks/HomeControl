@@ -9,6 +9,6 @@ router.post("/off", protectRoute, turnLedOff);
 router.get("/state", protectRoute, getLedStateController);
 router.post("/schedule", protectRoute, createLedSchedule);
 router.get("/schedules", protectRoute, getLedSchedules);
-router.delete("/schedule", protectRoute, deleteLedSchedule);
+router.delete("/schedule/:cronJobId", protectRoute, deleteLedSchedule);
 
 export default router;

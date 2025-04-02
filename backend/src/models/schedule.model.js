@@ -31,6 +31,10 @@ const Schedule = sequelize.define('Schedule', {
     type: {
         type: DataTypes.STRING,
         allowNull: true,
+    },
+    createdBy: {
+        type: DataTypes.STRING,
+        allowNull: true,
     }
 }, {
     tableName: 'Schedules',

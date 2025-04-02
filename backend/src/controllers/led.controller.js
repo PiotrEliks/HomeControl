@@ -65,7 +65,8 @@ export const createLedSchedule = async (req, res) => {
         const cronJobId = `job-${Date.now()}`;
         await saveScheduleToDB(days, hour, minute, cronExpression, cronJobId, type);
         setLedCronSchedule(cronExpression, cronJobId, type);
-        return res.status(200).json({ message: 'Harmonogram został ustawiony' });
+        const schedules = await Schedule.findAll()
+        return res.status(200).json(schedules);
     } catch (error) {
         console.error("Error creating schedule:", error);
         return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
@@ -84,7 +85,7 @@ export const getLedSchedules = async (req, res) => {
 
 export const deleteLedSchedule = async (req, res) => {
     try {
-        const { cronJobId } = req.body;
+        const { cronJobId } = req.params;
         if (!cronJobId) {
             return res.status(400).json({ message: 'Brak ID zadania' });
         }
