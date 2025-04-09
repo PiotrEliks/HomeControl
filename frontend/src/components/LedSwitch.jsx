@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react'
 import { useLedStore } from '../store/useLedStore.js';
 import { LoaderCircle, Power, PowerOff } from 'lucide-react';
+import { useAuthStore} from '../store/useAuthStore.js';
 
 const LedSwitch = () => {
   const { ledState, getLedState, setLedOn, setLedOff, isGettingLedState, isChangingLedState } = useLedStore();
+  const { authUser } = useAuthStore();
 
   useEffect(() => {
     getLedState();
@@ -17,7 +19,7 @@ const LedSwitch = () => {
       <div className="flex flex-row justify-center items-cetner gap-2">
         <button
           className={`relative inline-block text-lg group ${ledState ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-          onClick={() => setLedOn()}
+          onClick={() => setLedOn(authUser.fullName)}
           disabled={isChangingLedState || ledState}
         >
           <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-white transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg">

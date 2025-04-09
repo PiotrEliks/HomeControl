@@ -1,9 +1,11 @@
 import { getDeviceSocket, getLedState } from '../lib/socket.js';
 import { setLedCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
+import LedLogs from '../models/ledLogs.model.js';
 
 export const turnLedOn = async (req, res) => {
     try {
+        const { fullName } = req.body;
         const deviceSocket = getDeviceSocket();
         if (deviceSocket) {
             deviceSocket.emit("command", { command: "on" });
@@ -15,6 +17,12 @@ export const turnLedOn = async (req, res) => {
                   reject(new Error("Timeout waiting for LED update"));
                 }, 5000);
               });
+
+              const newLog = await LedLogs.create({
+                fullName,
+                state: false,
+              });
+
             return res.status(200).json({ message: "Polecenie włączenia wysłane", led: newState });
         } else {
             return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
@@ -38,6 +46,19 @@ export const turnLedOff = async (req, res) => {
               reject(new Error("Timeout waiting for LED update"));
             }, 5000);
           });
+
+          const lastLog = await LedLogs.findOne({
+            order: [['createdAt', 'DESC']]
+          });
+
+          if (lastLog) {
+              await lastLog.update({
+                  state: true
+              });
+          } else {
+              return res.status(500).json({ error: "LED już jest wyłączony" });
+          }
+
           return res.status(200).json({ message: "Polecenie wyłączenia wysłane", led: newState });
         } else {
           return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
