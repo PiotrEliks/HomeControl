@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../lib/db.js';
 
-const LedLogs = sequelize.define('LedLogs', {
+const ValveLogs = sequelize.define('ValveLogs', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -17,8 +17,8 @@ const LedLogs = sequelize.define('LedLogs', {
         allowNull: true,
     }
 }, {
-    tableName: 'LedLogs',
+    tableName: 'ValveLogs',
     timestamps: true
 });
 
-export default LedLogs;
+export default ValveLogs;

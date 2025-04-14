@@ -2,7 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 
 let deviceSocket = null;
 const frontendSockets = new Set();
-let ledState = false;
+let valveState = false;
 
 function initSocket(server) {
   const io = new SocketIOServer(server, {
@@ -34,17 +34,17 @@ function initSocket(server) {
       } else if (data.role === "frontend") {
         frontendSockets.add(socket);
         console.log("Frontend zarejestrowany");
-        socket.emit("state", { state: ledState });
+        socket.emit("state", { state: valveState });
       }
     });
 
     socket.on("update", (data) => {
       if (data.state !== undefined) {
-        ledState = data.state;
-        console.log("update", ledState)
+        valveState = data.state;
+        console.log("update", valveState)
         frontendSockets.forEach((client) => {
           if (client.connected) {
-            client.emit("state", { state: ledState });
+            client.emit("state", { state: valveState });
           }
         });
       }
@@ -60,12 +60,12 @@ function initSocket(server) {
   });
 }
 
-export { initSocket, getDeviceSocket, getLedState };
+export { initSocket, getDeviceSocket, getValveState };
 
 function getDeviceSocket() {
   return deviceSocket;
 }
 
-function getLedState() {
-  return ledState;
+function getValveState() {
+  return valveState;
 }

@@ -6,7 +6,7 @@ import path from 'path';
 import cookieParser from "cookie-parser";
 import { initSocket } from './lib/socket.js';
 import authRoutes from './routes/auth.route.js';
-import ledRoutes from './routes/led.route.js';
+import valveRoutes from './routes/valve.route.js';
 import { connectDB } from './lib/db.js';
 import { loadSchedulesFromDB } from './lib/cronTasks.js';
 
@@ -26,7 +26,7 @@ app.use(
 );
 
 app.use('/api/auth', authRoutes);
-app.use('/api/led', ledRoutes);
+app.use('/api/valve', valveRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));

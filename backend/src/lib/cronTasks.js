@@ -4,7 +4,7 @@ import { getDeviceSocket } from './socket.js';
 
 let cronTasks = {};
 
-export const setLedCronSchedule = (cronExpression, cronJobId, type) => {
+export const setValveCronSchedule = (cronExpression, cronJobId, type) => {
   if (cronTasks[cronJobId]) {
     console.log(`Zadanie o ID ${cronJobId} już istnieje`);
     return;
@@ -25,11 +25,11 @@ export const setLedCronSchedule = (cronExpression, cronJobId, type) => {
             resolve(data.state);
           });
           setTimeout(() => {
-            reject(new Error("Timeout waiting for LED update"));
+            reject(new Error("Timeout waiting for valve update"));
           }, 5000);
         });
-        console.log('LED task wykonany');
-        return res.status(200).json({ message: "Polecenie wyłączenia wysłane", led: newState });
+        console.log('Valve task wykonany');
+        return res.status(200).json({ message: "Polecenie wyłączenia wysłane", valve: newState });
       } else {
         return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
       }
@@ -74,7 +74,7 @@ export const loadSchedulesFromDB = async () => {
   try {
     const schedules = await Schedule.findAll();
     schedules.forEach(schedule => {
-      setLedCronSchedule(schedule.cronExpression, schedule.cronJobId, schedule.type);
+      setValveCronSchedule(schedule.cronExpression, schedule.cronJobId, schedule.type);
     });
   } catch (error) {
       console.error('Błąd ładowania harmonogramów:', error);
