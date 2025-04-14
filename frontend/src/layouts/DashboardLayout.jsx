@@ -34,7 +34,7 @@ const DashboardLayout = () => {
             sidebarCollapsed ? "w-18" : "w-64"
           } hidden md:block`}
         >
-          <div className={`flex ${sidebarCollapsed ? 'justify-center' : 'justify-end'}`}>
+          <div className="flex p-2 justify-start">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="mb-4 focus:outline-none cursor-pointer hover:text-white/60"

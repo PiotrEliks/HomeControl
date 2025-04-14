@@ -79,7 +79,7 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className={`cursor-pointer ${!isLoggingIn ? 'bg-green-800' : 'hover:bg-green-800/80'} hover:bg-green-800/80 rounded-2xl py-3 text-white font-bold w-full flex flex-row items-center justify-center gap-2 `}
+            className={`cursor-pointer bg-green-800 ${!isLoggingIn ? 'bg-green-800' : 'hover:bg-green-800/80'} hover:bg-green-800/80 rounded-2xl py-3 text-white font-bold w-full flex flex-row items-center justify-center gap-2 `}
             disabled={isLoggingIn}
             title="Zaloguj"
           >
