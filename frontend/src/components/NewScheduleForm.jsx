@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useLedStore } from '../store/useLedStore';
+import { useValveStore } from '../store/useValveStore';
 import Select from 'react-select';
 import { useAuthStore } from '../store/useAuthStore';
 
 const NewScheduleForm = () => {
-  const { createLedSchedule } = useLedStore();
+  const { createValveSchedule } = useValveStore();
   const { authUser } = useAuthStore();
   const [days, setDays] = useState([]);
   const [hour, setHour] = useState('');
@@ -33,7 +33,7 @@ const NewScheduleForm = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-        createLedSchedule(days, hour, minute, authUser.fullName, type);
+        createValveSchedule(days, hour, minute, authUser.fullName, type);
         setDays([]);
         setHour('');
         setMinute('');

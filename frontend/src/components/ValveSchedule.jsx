@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { useLedStore } from '../store/useLedStore.js';
+import { useValveStore } from '../store/useValveStore.js';
 import { Trash2 } from 'lucide-react';
 import NewScheduleForm from './NewScheduleForm.jsx';
 
-const LedSchedule = () => {
-  const { schedules, createLedSchedule, deleteLedSchedule, getLedSchedules } = useLedStore();
+const ValveSchedule = () => {
+  const { schedules, createValveSchedule, deleteValveSchedule, getValveSchedules } = useValveStore();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState(null);
 
   useEffect(() => {
-    getLedSchedules();
-  }, [getLedSchedules])
+    getValveSchedules();
+  }, [getValveSchedules])
 
   console.log(schedules)
 
@@ -39,7 +39,7 @@ const LedSchedule = () => {
   };
 
   const handleDeleteSchedule = (cronJobId) => {
-    deleteLedSchedule(cronJobId);
+    deleteValveSchedule(cronJobId);
     setShowDeleteConfirmation(false);
     setScheduleToDelete({});
   };
@@ -102,4 +102,4 @@ const LedSchedule = () => {
   )
 }
 
-export default LedSchedule
+export default ValveSchedule
