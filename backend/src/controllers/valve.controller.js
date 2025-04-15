@@ -1,7 +1,7 @@
 import { getDeviceSocket, getValveState } from '../lib/socket.js';
 import { setValveCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
-import ValveLogs from '../models/valveLogs.model.js';
+import ValveSession from '../models/valveSession.mode.js';
 
 export const turnValveOn = async (req, res) => {
     try {
@@ -16,17 +16,18 @@ export const turnValveOn = async (req, res) => {
                 setTimeout(() => {
                   reject(new Error("Timeout waiting for valve update"));
                 }, 5000);
-              });
+            });
 
-              const newLog = await ValveLogs.create({
-                fullName,
-                state: false,
-              });
+            await ValveSession.create({
+                openAt: new Date(),
+                openedBy: fullName,
+                method: 'manual'
+            });
 
-            return res.status(200).json({ message: "Polecenie włączenia wysłane", valve: newState });
-        } else {
-            return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
-        }
+              return res.status(200).json({ message: "Polecenie otwarcia wysłane", valve: newState });
+            } else {
+              return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
+            }
     } catch (error) {
         console.error("Error turning valve on:", error);
         return res.status(500).json({ error: "Wystąpił błąd podczas włączania zaworu" });
@@ -35,6 +36,7 @@ export const turnValveOn = async (req, res) => {
 
 export const turnValveOff = async (req, res) => {
     try {
+        const { fullName } = req.body;
         const deviceSocket = getDeviceSocket();
         if (deviceSocket) {
           deviceSocket.emit("command", { command: "off" });
@@ -47,19 +49,25 @@ export const turnValveOff = async (req, res) => {
             }, 5000);
           });
 
-          const lastLog = await ValveLogs.findOne({
-            order: [['createdAt', 'DESC']]
-          });
+        const openSession = await ValveSession.findOne({
+            where: { closeAt: null },
+            order: [['openAt', 'DESC']]
+        });
 
-          if (lastLog) {
-              await lastLog.update({
-                  state: true
-              });
-          } else {
-              return res.status(500).json({ error: "Zawór już jest wyłączony" });
-          }
+        if (openSession) {
+            const closeAt = new Date();
+            const duration = Math.floor((closeAt - openSession.openAt) / 1000);
+            await openSession.update({
+                closeAt,
+                duration,
+                closedBy: fullName
+            });
 
-          return res.status(200).json({ message: "Polecenie wyłączenia wysłane", valve: newState });
+            return res.status(200).json({ message: "Polecenie zamknięcia wysłane", valve: newState });
+        } else {
+            return res.status(400).json({ error: "Nie znaleziono aktywnej sesji otwarcia. Zawór prawdopodobnie już jest zamknięty." });
+        }
+
         } else {
           return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
         }
@@ -77,22 +85,45 @@ export const getValveStateController = (req, res) => {
 
 export const createValveSchedule = async (req, res) => {
     try {
-        const { days, hour, minute, createdBy, type } = req.body;
-        if (!days || !hour || !minute || !type) {
-            return res.status(400).json({ message: 'Brak wymaganych danych' });
-        }
+      const { days, openHour, openMinute, closeHour, closeMinute, createdBy } = req.body;
+      if (!days || openHour === undefined || openMinute === undefined || closeHour === undefined || closeMinute === undefined) {
+        return res.status(400).json({ message: 'Brak wymaganych danych' });
+      }
 
-        const cronExpression = `${minute} ${hour} * * ${days.join(',')}`;
-        const cronJobId = `job-${Date.now()}`;
-        await saveScheduleToDB(days, hour, minute, cronExpression, cronJobId, type, createdBy);
-        setValveCronSchedule(cronExpression, cronJobId, type);
-        const schedules = await Schedule.findAll()
-        return res.status(200).json(schedules);
+      const daysString = days.join(',');
+
+      const openCronExpression = `${openMinute} ${openHour} * * ${daysString}`;
+      const closeCronExpression = `${closeMinute} ${closeHour} * * ${daysString}`;
+
+      const timestamp = Date.now();
+      const openCronJobId = `open-job-${timestamp}`;
+      const closeCronJobId = `close-job-${timestamp}`;
+
+      setValveCronSchedule(openCronExpression, openCronJobId, 'open', createdBy);
+      setValveCronSchedule(closeCronExpression, closeCronJobId, 'close', createdBy);
+
+      const scheduleData = {
+        days,
+        openHour,
+        openMinute,
+        closeHour,
+        closeMinute,
+        openCronExpression,
+        openCronJobId,
+        closeCronExpression,
+        closeCronJobId,
+        createdBy
+      };
+
+      await saveScheduleToDB(scheduleData);
+
+      const schedules = await Schedule.findAll();
+      return res.status(201).json({ message: 'Harmonogramy zapisane', schedules });
     } catch (error) {
-        console.error("Error creating schedule:", error);
-        return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
+      console.error("Error creating schedule:", error);
+      return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
     }
-};
+  };
 
 export const getValveSchedules = async (req, res) => {
     try {
