@@ -9,6 +9,6 @@ router.post("/off", protectRoute, turnValveOff);
 router.get("/state", protectRoute, getValveStateController);
 router.post("/schedule", protectRoute, createValveSchedule);
 router.get("/schedules", protectRoute, getValveSchedules);
-router.delete("/schedule/:cronJobId", protectRoute, deleteValveSchedule);
+router.delete("/schedule/:openCronJobId", protectRoute, deleteValveSchedule);
 
 export default router;

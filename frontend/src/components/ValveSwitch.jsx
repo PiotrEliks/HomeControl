@@ -65,7 +65,7 @@ const ValveSwitch = () => {
         </button>
         <button
           className={`relative inline-block text-lg group ${!state ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-          onClick={() => setValveOff()}
+          onClick={() => setValveOff(authUser.fullName)}
           disabled={isChangingValveState || !state}
         >
           <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-white transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg">

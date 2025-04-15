@@ -36,10 +36,10 @@ export const useValveStore = create((set, get) => ({
     }
   },
 
-  setValveOff: async () => {
+  setValveOff: async (fullName) => {
     set({ isChangingValveState: true });
     try {
-      const res = await axiosInstance.post("/valve/off");
+      const res = await axiosInstance.post("/valve/off", { fullName });
       set({ valveState: res.data.valve });
       toast.success("Wyłączono zawór");
     } catch (error) {
@@ -49,14 +49,15 @@ export const useValveStore = create((set, get) => ({
     }
   },
 
-  createValveSchedule: async (days, hour, minute, createdBy, type) => {
+  createValveSchedule: async (days, openHour, openMinute, closeHour, closeMinute, createdBy) => {
     set({ isCreatingValveSchedule: true });
     try {
       const res = await axiosInstance.post("/valve/schedule", {
         days,
-        hour,
-        minute,
-        type,
+        openHour,
+        openMinute,
+        closeHour,
+        closeMinute,
         createdBy
       });
       set({ schedules: res.data });
@@ -68,10 +69,10 @@ export const useValveStore = create((set, get) => ({
     }
   },
 
-  deleteValveSchedule: async (cronJobId) => {
+  deleteValveSchedule: async (openCronJobId) => {
     set({ isDeletingValveSchedule: true });
     try {
-      const res = await axiosInstance.delete(`/valve/schedule/${cronJobId}`);
+      const res = await axiosInstance.delete(`/valve/schedule/${openCronJobId}`);
       set({ schedules: res.data });
       toast.success("Usunięto harmonogram");
     } catch (error) {

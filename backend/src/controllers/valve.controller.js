@@ -118,7 +118,7 @@ export const createValveSchedule = async (req, res) => {
       await saveScheduleToDB(scheduleData);
 
       const schedules = await Schedule.findAll();
-      return res.status(201).json({ message: 'Harmonogramy zapisane', schedules });
+      return res.status(201).json(schedules);
     } catch (error) {
       console.error("Error creating schedule:", error);
       return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
@@ -137,14 +137,14 @@ export const getValveSchedules = async (req, res) => {
 
 export const deleteValveSchedule = async (req, res) => {
     try {
-        const { cronJobId } = req.params;
-        if (!cronJobId) {
+        const { openCronJobId } = req.params;
+        if (!openCronJobId) {
             return res.status(400).json({ message: 'Brak ID zadania' });
         }
-        deleteCronTask(cronJobId);
+        deleteCronTask(openCronJobId);
         await Schedule.destroy({
             where: {
-                cronJobId: cronJobId,
+              openCronJobId: openCronJobId,
             }
         });
 

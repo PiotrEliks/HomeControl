@@ -1,114 +1,104 @@
 import React, { useState } from 'react';
-import { useValveStore } from '../store/useValveStore';
-import Select from 'react-select';
-import { useAuthStore } from '../store/useAuthStore';
+import { useValveStore } from '../store/useValveStore.js';
+import { useAuthStore } from '../store/useAuthStore.js';
 
 const NewScheduleForm = () => {
   const { createValveSchedule } = useValveStore();
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [openTime, setOpenTime] = useState('');
+  const [closeTime, setCloseTime] = useState('');
   const { authUser } = useAuthStore();
-  const [days, setDays] = useState([]);
-  const [hour, setHour] = useState('');
-  const [minute, setMinute] = useState('');
-  const [type, setType] = useState('');
 
-  const dayOptions = [
-    { value: 0, label: 'Nd' },
-    { value: 1, label: 'Pn' },
-    { value: 2, label: 'Wt' },
-    { value: 3, label: 'Śr' },
-    { value: 4, label: 'Czw' },
-    { value: 5, label: 'Pt' },
-    { value: 6, label: 'Sb' },
+  const daysOfWeek = [
+    { label: 'Poniedziałek', value: 1 },
+    { label: 'Wtorek', value: 2 },
+    { label: 'Środa', value: 3 },
+    { label: 'Czwartek', value: 4 },
+    { label: 'Piątek', value: 5 },
+    { label: 'Sobota', value: 6 },
+    { label: 'Niedziela', value: 0 },
   ];
 
-  const handleSelectChange = (selectedOptions) => {
-    setDays(selectedOptions.map(option => option.value));
-  };
-
-  const handleTypeChange = (e) => {
-    const selectedType = e.target.value;
-    setType(selectedType);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-        createValveSchedule(days, hour, minute, authUser.fullName, type);
-        setDays([]);
-        setHour('');
-        setMinute('');
-        setType('');
-    } catch (error) {
-        console.error(error)
+  const handleDayChange = (e) => {
+    const day = parseInt(e.target.value, 10);
+    if (e.target.checked) {
+      setSelectedDays(prev => [...prev, day]);
+    } else {
+      setSelectedDays(prev => prev.filter(d => d !== day));
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!openTime || !closeTime || selectedDays.length === 0) {
+      alert("Wprowadź wszystkie wymagane dane.");
+      return;
+    }
+
+    const [openHourStr, openMinuteStr] = openTime.split(':');
+    const [closeHourStr, closeMinuteStr] = closeTime.split(':');
+    const openHour = parseInt(openHourStr, 10);
+    const openMinute = parseInt(openMinuteStr, 10);
+    const closeHour = parseInt(closeHourStr, 10);
+    const closeMinute = parseInt(closeMinuteStr, 10);
+
+    await createValveSchedule(selectedDays, openHour, openMinute, closeHour, closeMinute, authUser.fullName);
+
+    setSelectedDays([]);
+    setOpenTime('');
+    setCloseTime('');
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-2 sm:flex sm:flex-row sm:gap-5 sm:justify-center">
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-col">
-        <label htmlFor="days">Dzień:</label>
-        <Select
-          id="days"
-          isMulti
-          options={dayOptions}
-          value={dayOptions.filter(option => days.includes(option.value))}
-          onChange={handleSelectChange}
-          className="react-select-container"
-          classNamePrefix="react-select"
-          closeMenuOnSelect={false}
-        />
+    <form onSubmit={handleSubmit} className="p-4 border mb-4 rounded-lg">
+      <div className="mb-2">
+        <label className="block font-bold mb-1">Wybierz dni:</label>
+        <div className="flex flex-wrap gap-2">
+          {daysOfWeek.map(day => (
+            <label key={day.value} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                value={day.value}
+                checked={selectedDays.includes(day.value)}
+                onChange={handleDayChange}
+                className="mr-1"
+              />
+              {day.label}
+            </label>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-col">
-        <label htmlFor="hour">Godzina:</label>
+
+      <div className="mb-2">
+        <label className="block font-bold mb-1" htmlFor="openTime">Czas otwarcia:</label>
         <input
-          type="number"
-          id="hour"
-          name="hour"
-          min="0"
-          max="23"
-          value={hour}
-          onChange={(e) => setHour(e.target.value)}
-          className="rounded-md p-1 pl-2 bg-white border-1 border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          id="openTime"
+          type="time"
+          value={openTime}
+          onChange={(e) => setOpenTime(e.target.value)}
+          className="border rounded px-2 py-1"
           required
         />
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-col">
-        <label htmlFor="minute">Minuta:</label>
+
+      <div className="mb-2">
+        <label className="block font-bold mb-1" htmlFor="closeTime">Czas zamknięcia:</label>
         <input
-          type="number"
-          id="minute"
-          name="minute"
-          min="0"
-          max="59"
-          value={minute}
-          onChange={(e) => setMinute(e.target.value)}
-          className="rounded-md p-1 pl-2 bg-white border-1 border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          id="closeTime"
+          type="time"
+          value={closeTime}
+          onChange={(e) => setCloseTime(e.target.value)}
+          className="border rounded px-2 py-1"
           required
         />
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-col">
-        <label htmlFor="days">Typ:</label>
-        <select
-          id="type"
-          name="type"
-          className="rounded-md p-1 bg-white border-1 border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          onChange={handleTypeChange}
-          value={type}
-          required
-        >
-            <option>Wybierz typ</option>
-            <option value="open">Włączenie</option>
-            <option value="close">Wyłączenie</option>
-        </select>
-      </div>
-      <div className="text-right">
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded-lg cursor-pointer"
-        >
-          Dodaj
-        </button>
-      </div>
+
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+      >
+        Zapisz harmonogram
+      </button>
     </form>
   );
 };
