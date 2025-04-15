@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/PiotrEliks/Waterly/issues"
   },
-  "homepage": "https://github.com/PiotrEliks/Waterly#readme"
+  "homepage": "https://github.com/PiotrEliks/Waterly#readme",
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  }
 }
