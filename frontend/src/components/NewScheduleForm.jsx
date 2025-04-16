@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useValveStore } from '../store/useValveStore.js';
 import { useAuthStore } from '../store/useAuthStore.js';
+import { X } from 'lucide-react';
 
-const NewScheduleForm = () => {
+const NewScheduleForm = ({ onClose }) => {
   const { createValveSchedule } = useValveStore();
   const [selectedDays, setSelectedDays] = useState([]);
   const [openTime, setOpenTime] = useState('');
@@ -49,57 +50,71 @@ const NewScheduleForm = () => {
     setCloseTime('');
   };
 
+  const handleClose = () => {
+    onClose(false);
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="p-4 border mb-4 rounded-lg">
-      <div className="mb-2">
-        <label className="block font-bold mb-1">Wybierz dni:</label>
-        <div className="flex flex-wrap gap-2">
-          {daysOfWeek.map(day => (
-            <label key={day.value} className="inline-flex items-center">
-              <input
-                type="checkbox"
-                value={day.value}
-                checked={selectedDays.includes(day.value)}
-                onChange={handleDayChange}
-                className="mr-1"
-              />
-              {day.label}
-            </label>
-          ))}
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="relative p-4 border mb-4 rounded-lg lg:grid lg:grid-cols-3 lg:text-center">
+        <div className="mb-2">
+          <label className="block font-bold mb-1">Wybierz dni:</label>
+          <div className="flex flex-wrap gap-2">
+            {daysOfWeek.map(day => (
+              <label key={day.value} className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  value={day.value}
+                  checked={selectedDays.includes(day.value)}
+                  onChange={handleDayChange}
+                  className="mr-1 cursor-pointer"
+                />
+                {day.label}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="mb-2">
-        <label className="block font-bold mb-1" htmlFor="openTime">Czas otwarcia:</label>
-        <input
-          id="openTime"
-          type="time"
-          value={openTime}
-          onChange={(e) => setOpenTime(e.target.value)}
-          className="border rounded px-2 py-1"
-          required
-        />
-      </div>
+        <div className="mb-2">
+          <label className="block font-bold mb-1" htmlFor="openTime">Czas otwarcia:</label>
+          <input
+            id="openTime"
+            type="time"
+            value={openTime}
+            onChange={(e) => setOpenTime(e.target.value)}
+            className="border rounded px-2 py-1"
+            required
+          />
+        </div>
 
-      <div className="mb-2">
-        <label className="block font-bold mb-1" htmlFor="closeTime">Czas zamknięcia:</label>
-        <input
-          id="closeTime"
-          type="time"
-          value={closeTime}
-          onChange={(e) => setCloseTime(e.target.value)}
-          className="border rounded px-2 py-1"
-          required
-        />
-      </div>
+        <div className="mb-2">
+          <label className="block font-bold mb-1" htmlFor="closeTime">Czas zamknięcia:</label>
+          <input
+            id="closeTime"
+            type="time"
+            value={closeTime}
+            onChange={(e) => setCloseTime(e.target.value)}
+            className="border rounded px-2 py-1"
+            required
+          />
+        </div>
 
-      <button
-        type="submit"
-        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
-      >
-        Zapisz harmonogram
-      </button>
-    </form>
+        <div className="mb-2 lg:col-span-3 lg:flex justify-end items-center">
+        <button
+          type="submit"
+          className="bg-green-600 hover:bg-green-600/70 text-white p-2 cursor-pointer rounded-lg"
+        >
+          Zapisz harmonogram
+        </button>
+        </div>
+        <button
+          className="absolute top-2 right-2"
+          onClick={() => {handleClose()}}
+        >
+          <X className="size-5 cursor-pointer text-red-500 hover:text-red-500/50" />
+        </button>
+      </form>
+    </div>
   );
 };
 
