@@ -1,253 +1,262 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
-import { LogOut, Trees, House, Menu, X, CircleUser, CalendarDays, Power, ChartNoAxesCombined, Lightbulb, DoorClosed } from 'lucide-react';
+import {
+  LogOut, Trees, House, Menu, X, CircleUser,
+  CalendarDays, Power, ChartNoAxesCombined,
+  Lightbulb, DoorClosed
+} from 'lucide-react';
 
 const DashboardLayout = () => {
   const { authUser, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [openGarden, setOpenGarden] = useState(false);
-  const [openHome, setOpenHome] = useState(false);
+  const [openHome, setOpenHome]   = useState(false);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
   useEffect(() => {
-    if (location.pathname === '/switch' || location.pathname === '/schedule' || location.pathname === '/garden-statistics') {
-      setOpenGarden(true);
-    }
-
-    if (location.pathname === '/lights' || location.pathname === '/doors' || location.pathname === '/home-statistics') {
-      setOpenHome(true);
-    }
+    setOpenGarden(['/switch','/schedule','/garden-statistics'].includes(location.pathname));
+    setOpenHome(  ['/lights','/doors','/home-statistics'].includes(location.pathname));
   }, [location]);
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (mobileSidebarOpen) setMobileSidebarOpen(false);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex flex-1 relative">
-        <aside
-          className={`bg-green-900 text-white p-4 transition-all duration-500 ${
-            sidebarCollapsed ? "w-18" : "w-64"
-          } hidden md:block`}
+    <div className="flex h-screen">
+      <aside
+        className={`
+          bg-green-900 text-white p-4
+          ${sidebarCollapsed ? "w-18" : "w-64"}
+          flex-none
+          overflow-y-auto
+          transition-all duration-300
+          hidden md:block
+        `}
+      >
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          className="mb-4 focus:outline-none hover:text-white/60 cursor-pointer"
+          title={sidebarCollapsed ? "Rozwiń menu" : "Zwiń menu"}
         >
-          <div className="flex p-2 justify-start">
+          <Menu />
+        </button>
+
+        <ul>
+          <li>
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="mb-4 focus:outline-none cursor-pointer hover:text-white/60"
-              title={sidebarCollapsed ? "Rozwiń menu" : "Zwiń menu"}
+              onClick={() => setOpenGarden(g => !g)}
+              className={`
+                w-full text-left p-2 mb-1 rounded-xl focus:outline-none cursor-pointer
+                hover:bg-green-700/80
+                ${openGarden ? 'bg-green-700/80' : ''}
+              `}
             >
-              <Menu />
+              <div className="flex items-center gap-1">
+                <Trees />
+                {!sidebarCollapsed && 'Ogród'}
+              </div>
             </button>
-          </div>
+            {openGarden && !sidebarCollapsed && (
+              <ul className="pl-4">
+                <li
+                  onClick={() => handleNavigation('switch')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/switch' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <Power /> On/Off
+                </li>
+                <li
+                  onClick={() => handleNavigation('schedule')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/schedule' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <CalendarDays /> Harmonogram
+                </li>
+                <li
+                  onClick={() => handleNavigation('garden-statistics')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <ChartNoAxesCombined /> Statystyki
+                </li>
+              </ul>
+            )}
+          </li>
+
+          <li>
+            <button
+              onClick={() => setOpenHome(h => !h)}
+              className={`
+                w-full text-left p-2 mb-1 rounded-xl focus:outline-none cursor-pointer
+                hover:bg-green-700/80
+                ${openHome ? 'bg-green-700/80' : ''}
+              `}
+            >
+              <div className="flex items-center gap-1">
+                <House />
+                {!sidebarCollapsed && 'Dom'}
+              </div>
+            </button>
+            {openHome && !sidebarCollapsed && (
+              <ul className="pl-4">
+                <li
+                  onClick={() => handleNavigation('lights')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/lights' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <Lightbulb /> Światła
+                </li>
+                <li
+                  onClick={() => handleNavigation('doors')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/doors' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <DoorClosed /> Drzwi
+                </li>
+                <li
+                  onClick={() => handleNavigation('home-statistics')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <ChartNoAxesCombined /> Statystyki
+                </li>
+              </ul>
+            )}
+          </li>
+        </ul>
+      </aside>
+
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 bg-green-900 text-white p-4 md:hidden overflow-y-auto">
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            className="mb-4 focus:outline-none cursor-pointer"
+          >
+            <X />
+          </button>
+
           <ul>
             <li>
               <button
-                onClick={() => setOpenGarden(!openGarden)}
-                className={`w-full text-left p-2 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer mb-1 ${
+                onClick={() => setOpenGarden(g => !g)}
+                className={`w-full text-left p-2 mb-1 rounded-xl hover:bg-green-700/80 flex items-center gap-1 ${
                   openGarden ? 'bg-green-700/80' : ''
                 }`}
               >
-                <div className="flex flex-row items-center gap-1">
-                  <Trees />{sidebarCollapsed ? '' : 'Ogród'}
-                </div>
-              </button>
-              {openGarden && !sidebarCollapsed && (
-                <ul className="pl-4">
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('switch')}
-                  >
-                    <Power className="size-5"/>On/Off
-                  </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/schedule' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('schedule')}
-                  >
-                    <CalendarDays className="size-5"/>Harmonogram
-                  </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('garden-statistics')}
-                  >
-                    <ChartNoAxesCombined className="size-5"/> Statystyki
-                  </li>
-                </ul>
-              )}
-            </li>
-            <li>
-              <button
-                onClick={() => setOpenHome(!openHome)}
-                className={`w-full text-left p-2 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer mb-1 ${
-                  openHome ? 'bg-green-700/80' : ''
-                }`}
-              >
-                <div className="flex flex-row items-center gap-1">
-                  <House />{sidebarCollapsed ? '' : 'Dom'}
-                </div>
-              </button>
-              {openHome && !sidebarCollapsed && (
-                <ul className="pl-4">
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/lights' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('lights')}
-                  >
-                    <Lightbulb className="size-5"/>Światła
-                  </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/doors' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('doors')}
-                  >
-                    <DoorClosed className="size-5"/>Drzwi
-                  </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => handleNavigation('home-statistics')}
-                  >
-                    <ChartNoAxesCombined className="size-5"/>Statystyki
-                  </li>
-                </ul>
-              )}
-            </li>
-          </ul>
-        </aside>
-        <div
-          className={`fixed top-0 inset-x-0 h-screen z-50 bg-green-900 p-4 text-white transform transition-transform duration-500 md:hidden ${
-            mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="flex justify-end">
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="mb-4 focus:outline-none cursor-pointer"
-              title="Zamknij menu"
-            >
-              <X />
-            </button>
-          </div>
-          <ul>
-            <li>
-              <button
-                onClick={() => setOpenGarden(!openGarden)}
-                className={`w-full text-left p-2 mb-1 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer flex flex-row items-center gap-1 ${
-                  openGarden ? 'bg-green-700/80' : ''
-                }`}
-              >
-                <Trees />Ogród
+                <Trees /> Ogród
               </button>
               {openGarden && (
                 <ul className="pl-4">
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/switch' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('switch'); setMobileSidebarOpen(false); }}
-                  >
-                    <Power className="size-5"/>On/Off
+                  <li onClick={() => handleNavigation('switch')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/switch' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <Power /> On/Off
                   </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/schedule' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('schedule'); setMobileSidebarOpen(false); }}
-                  >
-                    <CalendarDays className="size-5"/>Harmonogram
+                  <li onClick={() => handleNavigation('schedule')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/schedule' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <CalendarDays /> Harmonogram
                   </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('garden-statistics'); setMobileSidebarOpen(false); }}
-                  >
-                    <ChartNoAxesCombined className="size-5"/>Statystyki
+                  <li onClick={() => handleNavigation('garden-statistics')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <ChartNoAxesCombined /> Statystyki
                   </li>
                 </ul>
               )}
             </li>
             <li>
               <button
-                onClick={() => setOpenHome(!openHome)}
-                className={`w-full text-left p-2 hover:bg-green-700/80 rounded-xl focus:outline-none cursor-pointer flex flex-row items-center gap-1 ${
+                onClick={() => setOpenHome(h => !h)}
+                className={`w-full text-left p-2 mb-1 rounded-xl hover:bg-green-700/80 flex items-center gap-1 ${
                   openHome ? 'bg-green-700/80' : ''
                 }`}
               >
-                <House />Dom
+                <House /> Dom
               </button>
               {openHome && (
                 <ul className="pl-4">
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/lights' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('lights'); setMobileSidebarOpen(false); }}
-                  >
-                    <Lightbulb className="size-5"/>Światła
+                  <li onClick={() => handleNavigation('lights')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/lights' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <Lightbulb /> Światła
                   </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/doors' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('doors'); setMobileSidebarOpen(false); }}
-                  >
-                    <DoorClosed className="size-5"/>Drzwi
+                  <li onClick={() => handleNavigation('doors')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/doors' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <DoorClosed /> Drzwi
                   </li>
-                  <li
-                    className={`p-2 cursor-pointer hover:bg-green-800/40 rounded-xl mb-1 flex flex-row items-center gap-1 ${
-                      location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''
-                      }`}
-                    onClick={() => { handleNavigation('home-statistics'); setMobileSidebarOpen(false); }}
-                  >
-                    <ChartNoAxesCombined className="size-5"/>Statystyki
+                  <li onClick={() => handleNavigation('home-statistics')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/home-statistics' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <ChartNoAxesCombined /> Statystyki
                   </li>
                 </ul>
               )}
             </li>
           </ul>
         </div>
-        <div className="flex flex-col flex-1">
-          <nav className="bg-white text-black p-2 flex justify-between items-center gap-5 border-b">
-            <div className="flex items-center">
-              <button
-                className="mr-2 md:hidden cursor-pointer hover:text-black/50"
-                onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              >
-                <Menu />
-              </button>
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2">
-              <div className="text-black flex flex-row items-center gap-1">
-                <CircleUser />
-                {authUser.fullName}
-              </div>
-              <button
-                className="bg-green-900 hover:bg-green-900/80 px-3 py-1 rounded-xl flex items-center cursor-pointer text-white"
-                onClick={() => logout()}
-                title="Wyloguj"
-              >
-                <LogOut />
-                <span className="ml-1">Wyloguj</span>
-              </button>
-            </div>
-          </nav>
-          <main className="flex-1 p-4">
-            <Outlet />
-          </main>
-        </div>
+      )}
+      <div className="flex flex-col flex-1">
+        <nav className="bg-white text-black p-2 flex justify-between md:justify-end items-center border-b flex-none">
+          <button
+            className="md:hidden focus:outline-none cursor-pointer justify-self-start"
+            onClick={() => setMobileSidebarOpen(s => !s)}
+          >
+            <Menu />
+          </button>
+          <div className="flex items-center gap-2">
+            <CircleUser />
+            {authUser.fullName}
+            <button
+              onClick={logout}
+              className="bg-green-900 hover:bg-green-700 text-white px-3 py-1 rounded-xl flex flex-row items-center justify-center gap-1 cursor-pointer"
+              title="Wyloguj"
+            >
+              <LogOut /> <span className="ml-1">Wyloguj</span>
+            </button>
+          </div>
+        </nav>
+        <main className="flex-1 overflow-auto p-4 bg-gray-50">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

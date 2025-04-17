@@ -11,6 +11,30 @@ export const useValveStore = create((set, get) => ({
   isGettingValveSchedule: false,
   schedules: [],
 
+  valveSessions: [],
+  sessionsMeta: { total: 0, page: 1, perPage: 20, totalPages: 1 },
+  isGettingValveSessions: false,
+
+  /**
+   * Pobiera listę sesji z paginacją, filtrowaniem i sortowaniem.
+   * @param {object} params { openDate, closeDate, openedBy, closedBy, method, sortBy, sortOrder, limit, page }
+   */
+  getValveSessions: async (params = {}) => {
+    set({ isGettingValveSessions: true });
+    try {
+      const res = await axiosInstance.get('/valve/session', { params });
+      set({
+        valveSessions: res.data.sessions,
+        sessionsMeta: res.data.meta
+      });
+    } catch (error) {
+      console.error('Error fetching valve sessions:', error);
+      toast.error(error.response?.data?.error || 'Błąd przy pobieraniu sesji zaworu');
+    } finally {
+      set({ isGettingValveSessions: false });
+    }
+  },
+
   getValveState: async () => {
     set({ isGettingValveState: true });
     try {

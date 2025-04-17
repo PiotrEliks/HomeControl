@@ -2,6 +2,7 @@ import { getDeviceSocket, getValveState } from '../lib/socket.js';
 import { setValveCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
 import ValveSession from '../models/valveSession.mode.js';
+import { Op } from 'sequelize';
 
 export const turnValveOn = async (req, res) => {
     try {
