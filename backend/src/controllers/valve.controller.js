@@ -162,3 +162,61 @@ export const deleteValveSchedule = async (req, res) => {
         return res.status(500).json({ message: 'Błąd przy pobieraniu harmonogramów' });
     }
 };
+
+export const getValveSessions = async (req, res) => {
+  try {
+    const {
+      openDate, closeDate, openedBy, closedBy, method,
+      sortBy, sortOrder,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    // Parsujemy page/limit na liczby
+    const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
+    const perPage  = Math.max(1, parseInt(limit, 10) || 20);
+    const offset   = (pageNum - 1) * perPage;
+
+    // Filtry
+    const where = {};
+    if (openedBy) where.openedBy = openedBy;
+    if (closedBy) where.closedBy = closedBy;
+    if (method)   where.method   = method;
+
+    if (openDate) {
+      const start = new Date(`${openDate}T00:00:00`);
+      const end   = new Date(`${openDate}T23:59:59.999`);
+      where.openAt = { [Op.between]: [ start, end ] };
+    }
+    if (closeDate) {
+      const start = new Date(`${closeDate}T00:00:00`);
+      const end   = new Date(`${closeDate}T23:59:59.999`);
+      where.closeAt = { [Op.between]: [ start, end ] };
+    }
+
+    // Sortowanie
+    const validFields = ['openAt','closeAt','duration'];
+    const order = [];
+    if (sortBy && validFields.includes(sortBy)) {
+      const dir = (sortOrder||'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+      order.push([sortBy, dir]);
+    } else {
+      order.push(['openAt','DESC']); // domyślnie najnowsze otwarcia
+    }
+
+    // Paginate
+    const { count: total, rows: sessions } = await ValveSession.findAndCountAll({
+      where,
+      order,
+      limit: perPage,
+      offset
+    });
+
+    const totalPages = Math.ceil(total / perPage);
+
+    return res.json({ sessions, meta: { total, page: pageNum, perPage, totalPages } });
+  } catch (err) {
+    console.error('Error fetching sessions:', err);
+    return res.status(500).json({ error: 'Błąd podczas pobierania sesji zaworu' });
+  }
+};
