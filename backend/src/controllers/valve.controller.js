@@ -57,6 +57,7 @@ export const turnValveOff = async (req, res) => {
         if (openSession) {
             const closeAt = new Date();
             const duration = Math.floor((closeAt - openSession.openAt) / 1000);
+            console.log(duration, openSession.openAt, openSession.openAt.getTime())
             await openSession.update({
                 closeAt,
                 duration,

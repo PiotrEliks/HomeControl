@@ -7,7 +7,8 @@ const sequelize = new Sequelize(process.env.POSTGRESQL_URI, {
     dialect: "postgres",
     timezone: '+02:00',
     dialectOprions: {
-        ssl: true
+        ssl: true,
+        useUTC: true,
     }
 });
 
