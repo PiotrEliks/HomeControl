@@ -74,8 +74,13 @@ export const setValveCronSchedule = (cronExpression, cronJobId, type, createdBy)
             order: [['openAt', 'DESC']]
           });
           if (openSession) {
-            const closeAt = new Date();
-            const duration = Math.floor((closeAt.getTime() - new Date(openSession.openAt).getTime()) / 1000);
+            const openAt = openSession.openAt;
+            const openUtcMs  = openAt.getTime()  - (openAt.getTimezoneOffset() * 60000);
+            const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
+
+            const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
+            // const closeAt = new Date();
+            // const duration = Math.floor((closeAt.getTime() - new Date(openSession.openAt).getTime()) / 1000);
             await openSession.update({
               closeAt,
               duration,

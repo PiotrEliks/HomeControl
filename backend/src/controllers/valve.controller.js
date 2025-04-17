@@ -55,9 +55,14 @@ export const turnValveOff = async (req, res) => {
         });
 
         if (openSession) {
-            const closeAt = new Date();
-            const duration = Math.floor((closeAt - openSession.openAt) / 1000);
-            console.log(duration, openSession.openAt, openSession.openAt.getTime())
+            const openAt = openSession.openAt;
+            const openUtcMs  = openAt.getTime()  - (openAt.getTimezoneOffset() * 60000);
+            const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
+
+            const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
+            // const closeAt = new Date();
+            // const duration = Math.floor((closeAt - openSession.openAt) / 1000);
+            // console.log(duration, openSession.openAt, openSession.openAt.getTime())
             await openSession.update({
                 closeAt,
                 duration,

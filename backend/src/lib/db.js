@@ -8,7 +8,7 @@ const sequelize = new Sequelize(process.env.POSTGRESQL_URI, {
     timezone: '+02:00',
     dialectOprions: {
         ssl: true,
-        useUTC: true,
+        useUTC: false,
     }
 });
 
