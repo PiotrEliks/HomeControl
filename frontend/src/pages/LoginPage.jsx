@@ -25,8 +25,11 @@ const LoginPage = () => {
 
   return (
     <div className="w-full h-screen bg-gradient-to-r from-lime-600 to-green-900 flex items-center justify-center">
-      <div className="bg-white w-full rounded-3xl shadow-2xl sm:w-1/3">
-        <form onSubmit={handleSubmit}  className="space-y-6 p-8">
+      <div className="bg-white w-full m-5 rounded-2xl shadow-2xl flex flex-col justify-center items-center sm:w-7/8 sm:m-0 md:w-4/5 lg:w-2/3 xl:w-1/3">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full px-3 py-8 space-y-4 sm:px-8"
+        >
           <div className="w-full relative">
             <label className="absolute top-0 left-3 z-1 bg-white -translate-y-3 px-2">
               <span className="font-medium">
@@ -92,6 +95,7 @@ const LoginPage = () => {
               "Zaloguj"
             )}
           </button>
+          {error && <p className="text-red-700 text-center w-full">{error}</p>}
         </form>
       </div>
     </div>
