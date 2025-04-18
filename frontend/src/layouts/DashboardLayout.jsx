@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore.js';
 import {
@@ -51,7 +51,11 @@ const DashboardLayout = () => {
         <ul>
           <li>
             <button
-              onClick={() => setOpenGarden(g => !g)}
+              onClick={() => {
+                if (!sidebarCollapsed) {
+                  setOpenGarden(g => !g)
+                }
+                setSidebarCollapsed(false)}}
               className={`
                 w-full text-left p-2 mb-1 rounded-xl focus:outline-none cursor-pointer
                 hover:bg-green-700/80
@@ -101,7 +105,11 @@ const DashboardLayout = () => {
 
           <li>
             <button
-              onClick={() => setOpenHome(h => !h)}
+              onClick={() => {
+                if (!sidebarCollapsed) {
+                  setOpenHome(g => !g)
+                }
+                setSidebarCollapsed(false)}}
               className={`
                 w-full text-left p-2 mb-1 rounded-xl focus:outline-none cursor-pointer
                 hover:bg-green-700/80
