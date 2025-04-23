@@ -38,9 +38,9 @@ const NewScheduleForm = ({ onClose }) => {
 
     const [openHourStr, openMinuteStr] = openTime.split(':');
     const [closeHourStr, closeMinuteStr] = closeTime.split(':');
-    const openHour = parseInt(openHourStr, 10);
+    const openHour = parseInt(openHourStr, 10) - 2;
     const openMinute = parseInt(openMinuteStr, 10);
-    const closeHour = parseInt(closeHourStr, 10);
+    const closeHour = parseInt(closeHourStr, 10) - 2;
     const closeMinute = parseInt(closeMinuteStr, 10);
 
     await createValveSchedule(selectedDays, openHour, openMinute, closeHour, closeMinute, authUser.fullName);

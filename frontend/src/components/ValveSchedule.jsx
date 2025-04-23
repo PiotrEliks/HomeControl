@@ -79,14 +79,22 @@ const ValveSchedule = () => {
         <div className="h-full flex items-center justify-center px-2 py-1">Akcje</div>
       </div>
 
+      {schedules?.length === 0 && !isGettingValveSchedule && (
+        <div className="w-full flex justify-center py-3 text-sm text-gray-800 border border-zinc-400">Brak harmonogramów</div>
+      )}
+
+      {isGettingValveSchedule && schedules?.length == 0 && (
+        <div className="w-full flex justify-center py-3 text-sm text-gray-800 border border-zinc-400">Ładowanie harmonogramów...</div>
+      )}
+
       {schedules?.map((schedule) => (
         <div key={schedule.id} className="border-b border-l grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_2fr_1fr] text-sm text-center items-center">
           <div className="py-1 border-r-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{getDayOfWeek(schedule.days)}</div>
           <div className="py-1 border-r-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-            {schedule.openHour}:{schedule.openMinute < 10 ? '0' + schedule.openMinute : schedule.openMinute}
+            {schedule.openHour + 2}:{schedule.openMinute < 10 ? '0' + schedule.openMinute : schedule.openMinute}
           </div>
           <div className="py-1 border-r-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-            {schedule.closeHour}:{schedule.closeMinute < 10 ? '0' + schedule.closeMinute : schedule.closeMinute}
+            {schedule.closeHour + 2}:{schedule.closeMinute < 10 ? '0' + schedule.closeMinute : schedule.closeMinute}
           </div>
           <div className="py-1 border-r-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{schedule.createdBy}</div>
           <div className="py-0.5 border-r-1">

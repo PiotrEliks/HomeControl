@@ -111,7 +111,6 @@ export const useValveStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get("/valve/schedules");
       set({ schedules: res.data });
-      toast.success("Pobrano harmonogramy");
     } catch (error) {
       toast.error(error.response.data.error);
     } finally {
