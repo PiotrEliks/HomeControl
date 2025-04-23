@@ -1,96 +1,120 @@
-import React, { useEffect, useState } from 'react'
-import { useValveStore } from '../store/useValveStore.js';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Card, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { motion } from 'framer-motion';
 import { LoaderCircle, Power, PowerOff } from 'lucide-react';
+import { useValveStore } from '../store/useValveStore.js';
 import { useAuthStore } from '../store/useAuthStore.js';
 
 const ValveSwitch = () => {
-  const { valveState, getValveState, setValveOn, setValveOff, isGettingValveState, isChangingValveState } = useValveStore();
-  const { authUser } = useAuthStore();
-  const [state, setState] = useState(valveState);
+  const {
+    valveState,
+    getValveState,
+    setValveOn,
+    setValveOff,
+    isGettingValveState,
+    isChangingValveState
+  } = useValveStore();
 
-  const socket = useAuthStore((state) => state.socket);
+  const { authUser, socket } = useAuthStore();
+  const [state, setState] = useState(valveState);
 
   useEffect(() => {
     if (!socket) return;
+    const handleState = (data) => setState(data.state);
+    socket.on('state', handleState);
+    return () => socket.off('state', handleState);
+  }, [socket]);
 
-    const handleGetState = (data) => {
-      setState(data.state);
-      console.log(data);
+  const fetchState = useCallback(() => getValveState(), [getValveState]);
+  useEffect(() => { fetchState(); }, [fetchState]);
+
+  const toggleValve = () => {
+    if (state) {
+      setValveOff(authUser.fullName);
+    } else {
+      setValveOn(authUser.fullName);
     }
-
-    socket.on("state", (data) => handleGetState(data));
-
-    return () => {
-      socket.off("state");
-    }
-  }, [])
-
-
-  useEffect(() => {
-    getValveState();
-  }, [getValveState]);
-
-  console.log(valveState, state)
+  };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-center">
-      <div className="flex flex-row items-center justify-center gap-2 mb-5 text-xl">
-        Aktualny stan zaworu: <span>{isGettingValveState ? <LoaderCircle className="size-5"/> : state ? <span className="flex flex-row items-center gap-1 text-green-600"><Power className="text-green-600 size-5"/> WŁĄCZONY</span> : <span className="flex flex-row items-center gap-1 text-red-800"><PowerOff className="text-red-800 size-5"/> WYŁĄCZONY</span>}</span>
-      </div>
-      <div className="flex flex-row justify-center items-cetner gap-2">
-        <button
-          className={`relative inline-block text-lg group ${state ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-          onClick={() => setValveOn(authUser.fullName)}
-          disabled={isChangingValveState || state}
+    <Card className="max-w-sm mx-auto p-4 rounded-2xl shadow-md">
+      <CardContent className="flex flex-col items-center space-y-4">
+        <motion.svg
+          width="96"
+          height="96"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          initial={{ rotate: 0 }}
+          animate={{ rotate: state ? 360 : -360 }}
+          transition={{ type: 'tween', duration: 0.6 }}
+          className="w-24 h-24"
+          aria-label={`Zawór jest ${state ? 'otwarty' : 'zamknięty'}`}
         >
-          <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-white transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg">
-            <span
-              className={`absolute inset-0 w-full h-full px-5 py-3 rounded-lg ${
-                !state ? 'bg-green-500' : 'bg-green-800'
-              }`}
-            ></span>
-            <span
-              className={`absolute left-0 w-48 h-48 -ml-2 transition-all duration-300 origin-top-right -rotate-90 -translate-x-full translate-y-12 bg-green-800 ${
-                !state ? 'group-hover:-rotate-180 ease' : ''
-              }`}
-            ></span>
-            <span className="relative">Włącz</span>
-          </span>
-          <span
-            className={`absolute bottom-0 right-0 w-full h-12 -mb-1 -mr-1 transition-all duration-200 ease-linear bg-green-800 rounded-lg ${
-              !state ? 'group-hover:mb-0 group-hover:mr-0' : ''
-            }`}
-            data-rounded="rounded-lg"
-          ></span>
-        </button>
-        <button
-          className={`relative inline-block text-lg group ${!state ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-          onClick={() => setValveOff(authUser.fullName)}
-          disabled={isChangingValveState || !state}
-        >
-          <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-white transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg">
-            <span
-              className={`absolute inset-0 w-full h-full px-5 py-3 rounded-lg ${
-                state ? 'bg-red-500' : 'bg-red-800'
-              }`}
-            ></span>
-            <span
-              className={`absolute left-0 w-48 h-48 -ml-2 transition-all duration-300 origin-top-right -rotate-90 -translate-x-full translate-y-12 bg-red-800 ${
-                state ? 'group-hover:-rotate-180 ease' : ''
-              }`}
-            ></span>
-            <span className="relative">Wyłącz</span>
-          </span>
-          <span
-            className={`absolute bottom-0 right-0 w-full h-12 -mb-1 -mr-1 transition-all duration-200 ease-linear bg-red-800 rounded-lg ${
-              state ? 'group-hover:mb-0 group-hover:mr-0' : ''
-            }`}
-            data-rounded="rounded-lg"
-          ></span>
-        </button>
-      </div>
-    </div>
-  )
-}
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke={state ? '#10B981' : '#EF4444'}
+            strokeWidth="2"
+            fill="none"
+          />
+          <motion.path
+            d="M8 12 L11 15 L16 9"
+            stroke="#10B981"
+            strokeWidth="2"
+            fill="none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: state ? 1 : 0 }}
+            transition={{ duration: 0.3, delay: state ? 0.3 : 0 }}
+          />
+          <motion.path
+            d="M9 9 L15 15 M15 9 L9 15"
+            stroke="#EF4444"
+            strokeWidth="2"
+            fill="none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: state ? 0 : 1 }}
+            transition={{ duration: 0.3, delay: state ? 0 : 0.3 }}
+          />
+        </motion.svg>
+        <div className="text-lg font-medium">
+          {isGettingValveState ? (
+            <LoaderCircle className="animate-spin text-white" />
+          ) : state ? (
+            <span className="flex items-center gap-1 text-green-600">
+              WŁĄCZONY
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-red-600">
+              WYŁĄCZONY
+            </span>
+          )}
+        </div>
 
-export default ValveSwitch
+        <Button
+          onClick={toggleValve}
+          disabled={isChangingValveState || isGettingValveState}
+          className={`flex items-center space-x-2 px-6 py-3 ${state ? 'bg-red-500 hover:bg-red-500/70' : 'bg-green-500 hover:bg-green-500/70'}`}
+        >
+          {isChangingValveState ? (
+            <LoaderCircle className="animate-spin" />
+          ) : state ? (
+            <PowerOff />
+          ) : (
+            <Power />
+          )}
+          <span>
+            {isChangingValveState
+              ? 'Przetwarzanie...'
+              : state
+              ? 'Wyłącz Zawór'
+              : 'Włącz Zawór'}
+          </span>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ValveSwitch;
