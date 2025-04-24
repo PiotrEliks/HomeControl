@@ -66,6 +66,37 @@ const ValveSwitch = () => {
     }
   }, [state, previousState]);
 
+  function getLitrForm(value) {
+    if (!Number.isInteger(value)) {
+      return 'litra';
+    }
+    const n = Math.abs(value);
+
+    if (n === 1) {
+      return 'litr';
+    }
+
+    const mod100 = n % 100;
+    if (mod100 >= 12 && mod100 <= 14) {
+      return 'litrów';
+    }
+
+    const mod10 = n % 10;
+    if (mod10 >= 2 && mod10 <= 4) {
+      return 'litry';
+    }
+
+    return 'litrów';
+  }
+
+  function formatNumber(value) {
+    const fixed = value.toFixed(2);
+    const numberStr = fixed.endsWith('.00')
+      ? String(Math.trunc(value))
+      : fixed;
+    return `${numberStr} ${getLitrForm(value)}`;
+  }
+
   return (
     <Card className="max-w-sm mx-auto p-4 rounded-2xl shadow-md">
       <CardContent className="flex flex-col items-center space-y-4">
@@ -128,7 +159,7 @@ const ValveSwitch = () => {
         )} */}
         <div className="text-sm text-gray-500 mt-2">
           <strong>Zużycie wody: </strong>
-          {waterConsumption.toFixed(2)} litra
+          {formatNumber(waterConsumption)}
         </div>
 
         <Button
