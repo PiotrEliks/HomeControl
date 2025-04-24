@@ -148,7 +148,7 @@ const GardenStatisticsPage = () => {
                     <option value="openAt">Otwarcie</option>
                     <option value="closeAt">Zamknięcie</option>
                     <option value="duration">Czas trwania</option>
-                    <option value="duration">Ilość wody</option>
+                    <option value="waterFlow">Ilość wody</option>
                   </select>
                   <select
                     className="border rounded px-2 py-1"
@@ -196,8 +196,16 @@ const GardenStatisticsPage = () => {
                   ? new Date(sess.closeAt).toLocaleString('pl-PL')
                   : '—'}
               </div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{formatDuration(sess.duration)}</div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">10 l</div>
+              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
+                {sess.duration
+                  ? formatDuration(sess.duration)
+                  : '—'}
+              </div>
+              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
+                {sess.waterFlow
+                  ? sess.waterFlow + ' l'
+                  : '—'}
+              </div>
               <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{sess.openedBy}</div>
               <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{sess.closedBy ?? '—'}</div>
               <div className="h-full flex items-center justify-center px-2 py-1 border-r">{sess.method === 'manual' ? 'Ręcznie' : 'Harmonogram'}</div>

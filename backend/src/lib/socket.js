@@ -50,6 +50,18 @@ function initSocket(server) {
       }
     });
 
+    socket.on("updateWaterFlow", (data) => {
+      if (data && data.waterFlow !== undefined) {
+        let waterFlow = data.waterFlow;
+        console.log(`Otrzymano dane o przepływie wody: ${waterFlow} litra`);
+        frontendSockets.forEach((client) => {
+          if (client.connected) {
+            client.emit("waterFlow", { flow: waterFlow });
+          }
+        });
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log("Socket disconnected");
       if (socket === deviceSocket) {

@@ -31,6 +31,10 @@ const ValveSession = sequelize.define('ValveSession', {
   method: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  waterFlow: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
   }
 }, {
   tableName: 'ValveSessions',

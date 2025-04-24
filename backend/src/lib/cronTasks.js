@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import Schedule from '../models/schedule.model.js';
-import ValveSession from '../models/valveSession.mode.js';
+import ValveSession from '../models/valveSession.model.js';
 import { getDeviceSocket, getValveState } from './socket.js';
 
 let cronTasks = {};
@@ -16,31 +16,35 @@ export const setValveCronSchedule = (cronExpression, cronJobId, type, createdBy)
       const currentState = getValveState();
 
       const deviceSocket = getDeviceSocket();
+      const openSession = await ValveSession.findOne({
+        where: {
+          closeAt: null,
+          method: 'manual'
+        },
+        order: [['openAt', 'DESC']]
+      });
       if (deviceSocket) {
-        if (currentState) {
+        if (currentState && openSession) {
           deviceSocket.emit("command", { command: "off" });
+          let totalFlow
           await new Promise((resolve, reject) => {
             deviceSocket.once("update", (data) => {
+              totalFlow = data.totalFlow;
               resolve(data.state);
             });
             setTimeout(() => {
               reject(new Error("Timeout waiting for valve update"));
             }, 5000);
           });
-          const openSession = await ValveSession.findOne({
-            where: {
-              closeAt: null,
-              method: 'manual'
-            },
-            order: [['openAt', 'DESC']]
-          });
+          
           if (openSession) {
             const closeAt = new Date();
             const duration = Math.floor((closeAt.getTime() - new Date(openSession.openAt).getTime()) / 1000);
             await openSession.update({
               closeAt,
               duration,
-              closedBy: createdBy
+              closedBy: createdBy,
+              waterFlow: totalFlow
             });
           }
         }
@@ -49,8 +53,13 @@ export const setValveCronSchedule = (cronExpression, cronJobId, type, createdBy)
 
         deviceSocket.emit("command", { command: command });
 
+        let totalFlow;
+
         const newState = await new Promise((resolve, reject) => {
           deviceSocket.once("update", (data) => {
+            if (command === 'off') {
+              totalFlow = data.totalFlow;
+            }
             resolve(data.state);
           });
           setTimeout(() => {
@@ -80,12 +89,11 @@ export const setValveCronSchedule = (cronExpression, cronJobId, type, createdBy)
             const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
 
             const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
-            // const closeAt = new Date();
-            // const duration = Math.floor((closeAt.getTime() - new Date(openSession.openAt).getTime()) / 1000);
             await openSession.update({
               closeAt,
               duration,
-              closedBy: createdBy
+              closedBy: createdBy,
+              waterFlow: totalFlow
             });
           } else {
             console.log("Nie znaleziono aktywnej sesji harmonogramu otwarcia – być może zawór został zamknięty manualnie.");

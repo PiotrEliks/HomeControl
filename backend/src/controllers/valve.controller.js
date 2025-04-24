@@ -1,7 +1,7 @@
 import { getDeviceSocket, getValveState } from '../lib/socket.js';
 import { setValveCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
-import ValveSession from '../models/valveSession.mode.js';
+import ValveSession from '../models/valveSession.model.js';
 import { Op } from 'sequelize';
 
 export const turnValveOn = async (req, res) => {
@@ -41,14 +41,18 @@ export const turnValveOff = async (req, res) => {
         const deviceSocket = getDeviceSocket();
         if (deviceSocket) {
           deviceSocket.emit("command", { command: "off" });
+          let totalFlow;
           const newState = await new Promise((resolve, reject) => {
             deviceSocket.once("update", (data) => {
+              console.log("XXXX", data)
+              totalFlow = data.totalFlow;
               resolve(data.state);
             });
             setTimeout(() => {
               reject(new Error("Timeout waiting for valve update"));
             }, 5000);
           });
+          console.log(totalFlow)
 
         const openSession = await ValveSession.findOne({
             where: { closeAt: null },
@@ -62,13 +66,11 @@ export const turnValveOff = async (req, res) => {
             const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
 
             const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
-            // const closeAt = new Date();
-            // const duration = Math.floor((closeAt - openSession.openAt) / 1000);
-            // console.log(duration, openSession.openAt, openSession.openAt.getTime())
             await openSession.update({
                 closeAt,
                 duration,
-                closedBy: fullName
+                closedBy: fullName,
+                waterFlow: totalFlow
             });
 
             return res.status(200).json({ message: "Polecenie zamknięcia wysłane", valve: newState });
@@ -173,12 +175,10 @@ export const getValveSessions = async (req, res) => {
       limit = 20
     } = req.query;
 
-    // Parsujemy page/limit na liczby
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
     const perPage  = Math.max(1, parseInt(limit, 10) || 20);
     const offset   = (pageNum - 1) * perPage;
 
-    // Filtry
     const where = {};
     if (openedBy) where.openedBy = openedBy;
     if (closedBy) where.closedBy = closedBy;
@@ -195,17 +195,15 @@ export const getValveSessions = async (req, res) => {
       where.closeAt = { [Op.between]: [ start, end ] };
     }
 
-    // Sortowanie
-    const validFields = ['openAt','closeAt','duration'];
+    const validFields = ['openAt','closeAt','duration','waterFlow'];
     const order = [];
     if (sortBy && validFields.includes(sortBy)) {
       const dir = (sortOrder||'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
       order.push([sortBy, dir]);
     } else {
-      order.push(['openAt','DESC']); // domyślnie najnowsze otwarcia
+      order.push(['openAt','DESC']);
     }
 
-    // Paginate
     const { count: total, rows: sessions } = await ValveSession.findAndCountAll({
       where,
       order,

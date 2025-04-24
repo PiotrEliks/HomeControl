@@ -18,24 +18,53 @@ const ValveSwitch = () => {
 
   const { authUser, socket } = useAuthStore();
   const [state, setState] = useState(valveState);
+  const [waterConsumption, setWaterConsumption] = useState(0);
+  const [previousState, setPreviousState] = useState(valveState);
 
   useEffect(() => {
     if (!socket) return;
+
     const handleState = (data) => setState(data.state);
     socket.on('state', handleState);
-    return () => socket.off('state', handleState);
-  }, [socket]);
+
+    const handleWaterFlow = (data) => {
+      if (state) {
+        setWaterConsumption(data.flow);
+      }
+    };
+    socket.on('waterFlow', handleWaterFlow);
+
+    return () => {
+      socket.off('state', handleState);
+      socket.off('waterFlow', handleWaterFlow);
+    };
+  }, [socket, state]);
 
   const fetchState = useCallback(() => getValveState(), [getValveState]);
   useEffect(() => { fetchState(); }, [fetchState]);
+
+  useEffect(() => {
+    getValveState();
+  }, [getValveState]);
 
   const toggleValve = () => {
     if (state) {
       setValveOff(authUser.fullName);
     } else {
       setValveOn(authUser.fullName);
+      setWaterConsumption(0);
     }
   };
+
+  useEffect(() => {
+    if (state !== previousState) {
+      setPreviousState(state);
+
+      if (state) {
+        setWaterConsumption(0);
+      }
+    }
+  }, [state, previousState]);
 
   return (
     <Card className="max-w-sm mx-auto p-4 rounded-2xl shadow-md">
@@ -90,6 +119,16 @@ const ValveSwitch = () => {
               WYŁĄCZONY
             </span>
           )}
+        </div>
+        {/* {waterConsumption > 0 && (
+          <div className="text-sm text-gray-500 mt-2">
+            <strong>Zużycie wody: </strong>
+            {waterConsumption.toFixed(2)} litra
+          </div>
+        )} */}
+        <div className="text-sm text-gray-500 mt-2">
+          <strong>Zużycie wody: </strong>
+          {waterConsumption.toFixed(2)} litra
         </div>
 
         <Button
