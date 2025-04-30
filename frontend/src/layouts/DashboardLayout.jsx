@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore.js';
 import {
   LogOut, Trees, House, Menu, X, CircleUser,
   CalendarDays, Power, ChartNoAxesCombined,
-  Lightbulb, DoorClosed
+  Lightbulb, DoorClosed, ReceiptText
 } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -19,7 +19,7 @@ const DashboardLayout = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
-    setOpenGarden(['/switch','/schedule','/garden-statistics'].includes(location.pathname));
+    setOpenGarden(['/switch','/schedule','/garden-statistics','/valve-logs'].includes(location.pathname));
     setOpenHome(  ['/lights','/doors','/home-statistics'].includes(location.pathname));
   }, [location]);
 
@@ -98,6 +98,16 @@ const DashboardLayout = () => {
                   `}
                 >
                   <ChartNoAxesCombined /> Statystyki
+                </li>
+                <li
+                  onClick={() => handleNavigation('valve-logs')}
+                  className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/valve-logs' ? 'bg-green-800/80' : ''}
+                  `}
+                >
+                  <ReceiptText /> Rejestr zdarzeń
                 </li>
               </ul>
             )}
@@ -200,6 +210,13 @@ const DashboardLayout = () => {
                     ${location.pathname === '/garden-statistics' ? 'bg-green-800/80' : ''}
                   `}>
                     <ChartNoAxesCombined /> Statystyki
+                  </li>
+                  <li onClick={() => handleNavigation('valve-logs')} className={`
+                    p-2 mb-1 flex items-center gap-1 rounded-xl cursor-pointer
+                    hover:bg-green-800/40
+                    ${location.pathname === '/valve-logs' ? 'bg-green-800/80' : ''}
+                  `}>
+                    <ReceiptText /> Rejestr zdarzeń
                   </li>
                 </ul>
               )}

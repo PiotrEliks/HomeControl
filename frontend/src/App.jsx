@@ -12,6 +12,7 @@ import LightsPage from './pages/LightsPage.jsx';
 import DoorsPage from './pages/DoorsPage.jsx';
 import HomeStatisticsPage from './pages/HomeStatisticsPage.jsx';
 import NoMatchPage from './pages/NoMatchPage.jsx';
+import ValveLogs from './pages/ValveLogs.jsx';
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -43,6 +44,7 @@ function App() {
           <Route path="switch" element={<SwitchPage />} />
           <Route path="schedule" element={<SchedulePage />} />
           <Route path="garden-statistics" element={<GardenStatisticsPage />} />
+          <Route path="valve-logs" element={<ValveLogs />} />
           <Route path="lights" element={<LightsPage />} />
           <Route path="doors" element={<DoorsPage />} />
           <Route path="home-statistics" element={<HomeStatisticsPage />} />
