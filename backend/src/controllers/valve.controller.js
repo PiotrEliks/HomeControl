@@ -2,7 +2,7 @@ import { getDeviceSocket, getValveState } from '../lib/socket.js';
 import { setValveCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
 import ValveSession from '../models/valveSession.model.js';
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 
 export const turnValveOn = async (req, res) => {
     try {
@@ -217,5 +217,70 @@ export const getValveSessions = async (req, res) => {
   } catch (err) {
     console.error('Error fetching sessions:', err);
     return res.status(500).json({ error: 'Błąd podczas pobierania sesji zaworu' });
+  }
+};
+
+export const getValveStats = async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      openedBy,
+      method,
+      metric = 'flow',
+      groupBy = 'day'
+    } = req.query;
+
+    const where = {};
+    if (startDate && endDate) {
+      where.openAt = {
+        [Op.between]: [
+          new Date(`${startDate}T00:00:00.000Z`),
+          new Date(`${endDate}T23:59:59.999Z`)
+        ]
+      };
+    }
+    if (openedBy)    where.openedBy = openedBy;
+    if (method)      where.method   = method;
+
+    let group       = [];
+    let attributes  = [];
+
+    if (groupBy === 'day') {
+      attributes.push([fn('DATE', col('openAt')), 'date']);
+      group.push(literal('DATE("openAt")'));
+    }
+    if (groupBy === 'user') {
+      attributes.push('openedBy');
+      group.push('openedBy');
+    }
+    if (groupBy === 'method') {
+      attributes.push('method');
+      group.push('method');
+    }
+    if (groupBy === 'schedule') {
+      attributes.push('scheduleId');
+      group.push('scheduleId');
+    }
+
+    if (metric === 'flow') {
+      attributes.push([fn('SUM', col('waterFlow')), 'totalFlow']);
+    } else {
+      attributes.push([fn('SUM', col('duration')), 'totalDuration']);
+    }
+
+    const logs = await ValveSession.findAll({
+      where,
+      attributes,
+      group,
+      order: groupBy === 'day'
+        ? [[literal('DATE("openAt")'), 'ASC']]
+        : undefined
+    });
+
+    return res.json({ data: logs });
+  } catch (error) {
+    console.error('Error fetching valve logs:', error);
+    return res.status(500).json({ error: 'Błąd podczas pobierania danych' });
   }
 };
