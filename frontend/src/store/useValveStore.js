@@ -15,6 +15,29 @@ export const useValveStore = create((set, get) => ({
   sessionsMeta: { total: 0, page: 1, perPage: 20, totalPages: 1 },
   isGettingValveSessions: false,
 
+  valveLogs: [],
+  isGettingValveLogs: false,
+
+  /**
+   * Pobiera zagregowane logi zaworu:
+   * @param {object} params { startDate, endDate, metric, groupBy }
+   */
+  getValveLogs: async ({ startDate, endDate, metric, groupBy }) => {
+    set({ isGettingValveLogs: true })
+    try {
+      const res = await axiosInstance.get('/valve/stats', {
+        params: { startDate, endDate, metric, groupBy }
+      })
+      // oczekujemy: res.data.data = [{ date/user/method/schedule, totalFlow|totalDuration }, …]
+      set({ valveLogs: res.data.data })
+    } catch (err) {
+      console.error('Error fetching valve logs:', err)
+      toast.error(err.response?.data?.error || 'Błąd przy pobieraniu statystyk')
+    } finally {
+      set({ isGettingValveLogs: false })
+    }
+  },
+
   /**
    * Pobiera listę sesji z paginacją, filtrowaniem i sortowaniem.
    * @param {object} params { openDate, closeDate, openedBy, closedBy, method, sortBy, sortOrder, limit, page }
