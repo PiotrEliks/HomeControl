@@ -1,11 +1,11 @@
 import { Server as SocketIOServer } from "socket.io";
 
-let deviceSocket = null;
-const frontendSockets = new Set();
-let valveState = false;
+const deviceSockets = new Map();
+const ioClients = new Set();
+let io;
 
-function initSocket(server) {
-  const io = new SocketIOServer(server, {
+export function initSocket(server) {
+  io = new SocketIOServer(server, { 
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
@@ -15,69 +15,61 @@ function initSocket(server) {
     allowEIO3: true,
   });
 
-  io.on("connection", (socket) => {
-    console.log("Nowe połączenie socket.io");
+  io.on("connection", socket => {
+    console.log("🔌 Nowe połączenie socket.io:", socket.id);
 
-    socket.on("register", (data) => {
-      console.log("Rejestracja, odebrane dane:", data);
+    socket.on("register", data => {
+      let payload = data;
       if (typeof data === "string") {
-        try {
-          data = JSON.parse(data);
-        } catch (e) {
-          console.error("Błąd parsowania danych rejestracyjnych:", e);
-          return;
-        }
+        try { payload = JSON.parse(data); }
+        catch (e) { return console.error("🚨 Błąd JSON:", e); }
       }
-      if (data.role === "device") {
-        deviceSocket = socket;
-        console.log("Urządzenie zarejestrowane");
-      } else if (data.role === "frontend") {
-        frontendSockets.add(socket);
-        console.log("Frontend zarejestrowany");
-        socket.emit("state", { state: valveState });
+
+      const { role, deviceId, deviceType } = payload;
+      if (role === "device" && deviceId) {
+        deviceSockets.set(deviceId, socket);
+        socket.join(`device:${deviceId}`);
+        socket.deviceId = deviceId;
+        socket.deviceType = deviceType;
+        console.log(`📟 Urządzenie [${deviceType}] ${deviceId} zarejestrowane`);
+
+        socket.emit("registered", { success: true, deviceId });
+      }
+      else if (role === "frontend") {
+        ioClients.add(socket);
+        console.log(`💻 Frontend ${socket.id} zarejestrowany`);
+        socket.emit("devices", Array.from(deviceSockets.keys()));
       }
     });
 
-    socket.on("update", (data) => {
-      if (data.state !== undefined) {
-        valveState = data.state;
-        console.log("update", valveState)
-        frontendSockets.forEach((client) => {
-          if (client.connected) {
-            client.emit("state", { state: valveState });
-          }
-        });
+    socket.on("subscribe", ({ deviceId }) => {
+      if (!socket.deviceId) {
+        socket.join(`device:${deviceId}`);
+        console.log(`👁️ Frontend ${socket.id} subskrybuje ${deviceId}`);
       }
     });
 
-    socket.on("updateWaterFlow", (data) => {
-      if (data && data.waterFlow !== undefined) {
-        let waterFlow = data.waterFlow;
-        console.log(`Otrzymano dane o przepływie wody: ${waterFlow} litra`);
-        frontendSockets.forEach((client) => {
-          if (client.connected) {
-            client.emit("waterFlow", { flow: waterFlow });
-          }
-        });
-      }
+    socket.on("updateState", ({ deviceId, state, extra }) => {
+      io.to(`device:${deviceId}`).emit("state", { deviceId, state, extra });
+    });
+
+    socket.on("command", ({ deviceId, command }) => {
+      io.to(`device:${deviceId}`).emit("command", { command });
     });
 
     socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-      if (socket === deviceSocket) {
-        deviceSocket = null;
+      console.log("🔌 Socket rozłączony:", socket.id);
+      if (socket.deviceId) {
+        deviceSockets.delete(socket.deviceId);
+        io.to(`device:${socket.deviceId}`)
+          .emit("state", { deviceId: socket.deviceId, disconnected: true });
       }
-      frontendSockets.delete(socket);
+      ioClients.delete(socket);
     });
   });
 }
 
-export { initSocket, getDeviceSocket, getValveState };
-
-function getDeviceSocket() {
-  return deviceSocket;
-}
-
-function getValveState() {
-  return valveState;
+export function sendCommandToDevice(deviceId, command) {
+  if (!io) throw new Error("Socket.IO nie zainicjalizowane");
+  io.to(`device:${deviceId}`).emit("command", { command });
 }
