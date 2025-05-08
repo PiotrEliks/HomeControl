@@ -8,6 +8,10 @@ const ValveSession = sequelize.define('ValveSession', {
     autoIncrement: true,
     allowNull: false,
   },
+  deviceId: { 
+    type: DataTypes.STRING, 
+    allowNull: false 
+  },
   openAt: {
     type: DataTypes.DATE,
     allowNull: false,

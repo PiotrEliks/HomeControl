@@ -5,153 +5,138 @@ import { getDeviceSocket, getValveState } from './socket.js';
 
 let cronTasks = {};
 
-export const setValveCronSchedule = (cronExpression, cronJobId, type, createdBy) => {
+export const setValveCronSchedule = (deviceId, cronExpression, cronJobId, type, createdBy) => {
   if (cronTasks[cronJobId]) {
-    console.log(`Zadanie o ID ${cronJobId} już istnieje`);
+    console.log(`Zadanie o ID ${cronJobId} już istnieje dla urządzenia ${deviceId}`);
     return;
   }
 
   cronTasks[cronJobId] = cron.schedule(cronExpression, async () => {
     try {
-      const currentState = getValveState();
+      const socket = getDeviceSocket(deviceId);
+      if (!socket) {
+        console.error(`Urządzenie ${deviceId} nie jest podłączone`);
+        return;
+      }
 
-      const deviceSocket = getDeviceSocket();
-      const openSession = await ValveSession.findOne({
-        where: {
-          closeAt: null,
-          method: 'manual'
-        },
-        order: [['openAt', 'DESC']]
-      });
-      if (deviceSocket) {
-        if (currentState && openSession) {
-          deviceSocket.emit("command", { command: "off" });
-          let totalFlow
-          await new Promise((resolve, reject) => {
-            deviceSocket.once("update", (data) => {
-              totalFlow = data.totalFlow;
-              resolve(data.state);
-            });
-            setTimeout(() => {
-              reject(new Error("Timeout waiting for valve update"));
-            }, 5000);
-          });
-          
-          if (openSession) {
-            const closeAt = new Date();
-            const duration = Math.floor((closeAt.getTime() - new Date(openSession.openAt).getTime()) / 1000);
-            await openSession.update({
-              closeAt,
-              duration,
-              closedBy: createdBy,
-              waterFlow: totalFlow
-            });
-          }
-        }
+      const current = getValveState(deviceId)?.state;
 
-        const command = type === 'open' ? 'on' : 'off';
-
-        deviceSocket.emit("command", { command: command });
-
-        let totalFlow;
-
-        const newState = await new Promise((resolve, reject) => {
-          deviceSocket.once("update", (data) => {
-            if (command === 'off') {
-              totalFlow = data.totalFlow;
-            }
+      if (type === 'open' && current === 'on') {
+        console.log(`Cron [${cronJobId}]: zawór ${deviceId} jest już otwarty, najpierw zamykam`);
+        socket.emit('command', { command: 'off' });
+        let flowBefore;
+        await new Promise((resolve, reject) => {
+          socket.once('update', data => {
+            flowBefore = data.extra?.totalFlow ?? null;
             resolve(data.state);
           });
-          setTimeout(() => {
-            reject(new Error("Timeout waiting for valve update"));
-          }, 5000);
+          setTimeout(() => reject(new Error('Timeout zamykania przed otwarciem')), 5000);
         });
-        console.log(`Zadanie ${type} zaworu wykonane, nowy stan: ${newState}`);
-        if (type === 'open') {
-          await ValveSession.create({
-            openAt: new Date(),
-            openedBy: createdBy,
-            method: 'schedule'
-          });
+ 
+        const lastSession = await ValveSession.findOne({
+          where: { deviceId, closeAt: null, method: 'schedule' },
+          order: [['openAt', 'DESC']]
+        });
+        if (lastSession) {
+          const closeAt = new Date();
+          const duration = Math.floor((closeAt - lastSession.openAt) / 1000);
+          await lastSession.update({ closeAt, duration, closedBy: createdBy, waterFlow: flowBefore });
         }
-        if (type === 'close') {
-          const openSession = await ValveSession.findOne({
-            where: {
-              closeAt: null,
-              method: 'schedule'
-            },
-            order: [['openAt', 'DESC']]
-          });
-          if (openSession) {
-            const closeAt = new Date();
-            const openAt = openSession.openAt;
-            const openUtcMs  = openAt.getTime()  - (openAt.getTimezoneOffset() * 60000);
-            const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
+      }
 
-            const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
-            await openSession.update({
-              closeAt,
-              duration,
-              closedBy: createdBy,
-              waterFlow: totalFlow
-            });
-          } else {
-            console.log("Nie znaleziono aktywnej sesji harmonogramu otwarcia – być może zawór został zamknięty manualnie.");
-          }
+      const command = type === 'open' ? 'on' : 'off';
+      console.log(`Cron [${cronJobId}] wysyła komendę ${command} do ${deviceId}`);
+      socket.emit('command', { command });
+
+      let totalFlow = null;
+      const newState = await new Promise((resolve, reject) => {
+        socket.once('update', data => {
+          if (command === 'off') totalFlow = data.extra?.totalFlow ?? null;
+          resolve(data.state);
+        });
+        setTimeout(() => reject(new Error('Timeout waiting for update')), 5000);
+      });
+      console.log(`Cron [${cronJobId}] zakończony. Nowy stan: ${newState}`);
+
+      if (type === 'open' && newState === 'on') {
+        await ValveSession.create({ deviceId, openAt: new Date(), openedBy: createdBy, method: 'schedule' });
+      }
+      if (type === 'close' && newState === 'off') {
+        const session = await ValveSession.findOne({
+          where: { deviceId, closeAt: null, method: 'schedule' },
+          order: [['openAt', 'DESC']]
+        });
+        if (session) {
+          const closeAt = new Date();
+          const duration = Math.floor((closeAt - session.openAt) / 1000);
+          await session.update({ closeAt, duration, closedBy: createdBy, waterFlow: totalFlow });
+        } else {
+          console.log(`Brak aktywnej sesji schedule do zamknięcia dla urządzenia ${deviceId}`);
         }
-
-        return newState;
-      } else {
-        console.error("Urządzenie nie jest podłączone");
       }
     } catch (error) {
-      console.error("CronJob Failed", error);
+      console.error(`CronJob [${cronJobId}] failed for device ${deviceId}:`, error);
     }
   });
 
-  console.log(`Harmonogram ustawiony: ${cronExpression} (typ: ${type})`);
+  console.log(`Harmonogram ustawiony dla ${deviceId}: ${cronExpression} (typ: ${type}, ID: ${cronJobId})`);
 };
 
 export const deleteCronTask = (cronJobId) => {
-  if (cronTasks[cronJobId]) {
-      cronTasks[cronJobId].stop();
-      delete cronTasks[cronJobId];
-      console.log(`Zadanie o ID ${cronJobId} zostało usunięte`);
+  const task = cronTasks[cronJobId];
+  if (task) {
+    task.stop();
+    delete cronTasks[cronJobId];
+    console.log(`Zadanie ${cronJobId} usunięte`);
   } else {
-      console.log(`Zadanie o ID ${cronJobId} nie istnieje`);
+    console.log(`Zadanie ${cronJobId} nie istnieje`);
   }
 };
 
 export const saveScheduleToDB = async (data) => {
-  const { days, openHour, openMinute, closeHour, closeMinute, openCronExpression, openCronJobId, closeCronExpression, closeCronJobId, createdBy } = data;
   try {
-      const schedule = await Schedule.create({
-          days,
-          openHour,
-          openMinute,
-          closeHour,
-          closeMinute,
-          openCronExpression,
-          openCronJobId,
-          closeCronExpression,
-          closeCronJobId,
-          createdBy
-      });
-      console.log('Harmonogram zapisany w bazie danych');
-      return schedule;
+    const schedule = await Schedule.create({
+      deviceId:            data.deviceId,
+      days:                data.days,
+      openHour:            data.openHour,
+      openMinute:          data.openMinute,
+      closeHour:           data.closeHour,
+      closeMinute:         data.closeMinute,
+      openCronExpression:  data.openCronExpression,
+      openCronJobId:       data.openCronJobId,
+      closeCronExpression: data.closeCronExpression,
+      closeCronJobId:      data.closeCronJobId,
+      createdBy:           data.createdBy
+    });
+    console.log('Harmonogram zapisany w bazie danych');
+    return schedule;
   } catch (error) {
-      console.error('Błąd zapisywania harmonogramu:', error);
+    console.error('Błąd zapisu harmonogramu:', error);
+    throw error;
   }
 };
 
 export const loadSchedulesFromDB = async () => {
   try {
     const schedules = await Schedule.findAll();
-    schedules.forEach(schedule => {
-      setValveCronSchedule(schedule.openCronExpression, schedule.openCronJobId, 'open', schedule.createdBy);
-      setValveCronSchedule(schedule.closeCronExpression, schedule.closeCronJobId, 'close', schedule.createdBy);
+    schedules.forEach(s => {
+      setValveCronSchedule(
+        s.deviceId,
+        s.openCronExpression,
+        s.openCronJobId,
+        'open',
+        s.createdBy
+      );
+      setValveCronSchedule(
+        s.deviceId,
+        s.closeCronExpression,
+        s.closeCronJobId,
+        'close',
+        s.createdBy
+      );
     });
+    console.log('Wszystkie harmonogramy załadowane z bazy');
   } catch (error) {
-      console.error('Błąd ładowania harmonogramów:', error);
+    console.error('Błąd ładowania harmonogramów:', error);
   }
 };

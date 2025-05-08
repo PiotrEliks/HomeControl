@@ -1,286 +1,203 @@
-import { getDeviceSocket, getValveState } from '../lib/socket.js';
+import { getDeviceSocket, getValveState, sendCommandToDevice } from '../lib/socket.js';
 import { setValveCronSchedule, saveScheduleToDB, deleteCronTask } from '../lib/cronTasks.js';
 import Schedule from '../models/schedule.model.js';
 import ValveSession from '../models/valveSession.model.js';
 import { Op, fn, col, literal } from 'sequelize';
 
 export const turnValveOn = async (req, res) => {
-    try {
-        const { fullName } = req.body;
-        const deviceSocket = getDeviceSocket();
-        if (deviceSocket) {
-            deviceSocket.emit("command", { command: "on" });
-            const newState = await new Promise((resolve, reject) => {
-                deviceSocket.once("update", (data) => {
-                  resolve(data.state);
-                });
-                setTimeout(() => {
-                  reject(new Error("Timeout waiting for valve update"));
-                }, 5000);
-            });
+  try {
+    const { deviceId } = req.params;
+    const { fullName } = req.body;
+    const socket = getDeviceSocket(deviceId);
+    if (!socket) return res.status(404).json({ error: "Urządzenie niepodłączone" });
 
-            await ValveSession.create({
-                openAt: new Date(),
-                openedBy: fullName,
-                method: 'manual'
-            });
+    socket.emit("command", { command: "on" });
+    const newState = await new Promise((resolve, reject) => {
+      socket.once("update", data => resolve(data.state));
+      setTimeout(() => reject(new Error("Timeout")), 5000);
+    });
 
-              return res.status(200).json({ message: "Polecenie otwarcia wysłane", valve: newState });
-            } else {
-              return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
-            }
-    } catch (error) {
-        console.error("Error turning valve on:", error);
-        return res.status(500).json({ error: "Wystąpił błąd podczas włączania zaworu" });
-    }
+    await ValveSession.create({
+      deviceId,
+      openAt:    new Date(),
+      openedBy:  fullName,
+      method:    'manual'
+    });
+
+    res.json({ message: "Zawór otworzony", valve: newState });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Błąd włączania" });
+  }
 };
 
 export const turnValveOff = async (req, res) => {
-    try {
-        const { fullName } = req.body;
-        const deviceSocket = getDeviceSocket();
-        if (deviceSocket) {
-          deviceSocket.emit("command", { command: "off" });
-          let totalFlow;
-          const newState = await new Promise((resolve, reject) => {
-            deviceSocket.once("update", (data) => {
-              console.log("XXXX", data)
-              totalFlow = data.totalFlow;
-              resolve(data.state);
-            });
-            setTimeout(() => {
-              reject(new Error("Timeout waiting for valve update"));
-            }, 5000);
-          });
-          console.log(totalFlow)
+  try {
+    const { deviceId } = req.params;
+    const { fullName } = req.body;
+    const socket = getDeviceSocket(deviceId);
+    if (!socket) return res.status(404).json({ error: "Urządzenie niepodłączone" });
 
-        const openSession = await ValveSession.findOne({
-            where: { closeAt: null },
-            order: [['openAt', 'DESC']]
-        });
+    socket.emit("command", { command: "off" });
+    let totalFlow;
+    const newState = await new Promise((resolve, reject) => {
+      socket.once("update", data => {
+        totalFlow = data.extra?.totalFlow ?? null;
+        resolve(data.state);
+      });
+      setTimeout(() => reject(new Error("Timeout")), 5000);
+    });
 
-        if (openSession) {
-            const closeAt = new Date();
-            const openAt = openSession.openAt;
-            const openUtcMs  = openAt.getTime()  - (openAt.getTimezoneOffset() * 60000);
-            const closeUtcMs = closeAt.getTime() - (closeAt.getTimezoneOffset() * 60000);
-
-            const duration = Math.floor((closeUtcMs - openUtcMs) / 1000);
-            await openSession.update({
-                closeAt,
-                duration,
-                closedBy: fullName,
-                waterFlow: totalFlow
-            });
-
-            return res.status(200).json({ message: "Polecenie zamknięcia wysłane", valve: newState });
-        } else {
-            return res.status(400).json({ error: "Nie znaleziono aktywnej sesji otwarcia. Zawór prawdopodobnie już jest zamknięty." });
-        }
-
-        } else {
-          return res.status(500).json({ error: "Urządzenie nie jest podłączone" });
-        }
-    } catch (error) {
-        console.error("Error turning valve off:", error);
-        return res.status(500).json({ error: "Wystąpił błąd podczas wyłączania zaworu" });
+    const session = await ValveSession.findOne({
+      where: { deviceId, closeAt: null },
+      order: [['openAt','DESC']]
+    });
+    if (!session) {
+      return res.status(400).json({ error: "Brak aktywnej sesji" });
     }
+
+    const closeAt = new Date();
+    const duration = Math.floor((closeAt - session.openAt) / 1000);
+    await session.update({
+      closeAt,
+      duration,
+      closedBy: fullName,
+      waterFlow: totalFlow
+    });
+
+    res.json({ message: "Zawór zamknięty", valve: newState });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Błąd wyłączania" });
+  }
 };
 
 export const getValveStateController = (req, res) => {
-    const valveState = getValveState();
-    console.log(valveState);
-    return res.status(200).json({ valve: valveState });
+  const { deviceId } = req.params;
+  const valve = getValveState(deviceId);
+  res.json({ deviceId, valve });
 };
 
 export const createValveSchedule = async (req, res) => {
-    try {
-      const { days, openHour, openMinute, closeHour, closeMinute, createdBy } = req.body;
-      if (!days || openHour === undefined || openMinute === undefined || closeHour === undefined || closeMinute === undefined) {
-        return res.status(400).json({ message: 'Brak wymaganych danych' });
-      }
+  try {
+    const { deviceId } = req.params;
+    const { days, openHour, openMinute, closeHour, closeMinute, createdBy } = req.body;
+    const daysString = days.join(',');
+    const ts = Date.now();
+    const openId  = `open-${deviceId}-${ts}`;
+    const closeId = `close-${deviceId}-${ts}`;
+    const openExpr  = `${openMinute} ${openHour} * * ${daysString}`;
+    const closeExpr = `${closeMinute} ${closeHour} * * ${daysString}`;
 
-      const daysString = days.join(',');
+    setValveCronSchedule(deviceId, openExpr,  openId,  'open',  createdBy);
+    setValveCronSchedule(deviceId, closeExpr, closeId, 'close', createdBy);
 
-      const openCronExpression = `${openMinute} ${openHour} * * ${daysString}`;
-      const closeCronExpression = `${closeMinute} ${closeHour} * * ${daysString}`;
+    await saveScheduleToDB({
+      deviceId,
+      days, openHour, openMinute, closeHour, closeMinute,
+      openCronExpression: openExpr,
+      openCronJobId: openId,
+      closeCronExpression: closeExpr,
+      closeCronJobId: closeId,
+      createdBy
+    });
 
-      const timestamp = Date.now();
-      const openCronJobId = `open-job-${timestamp}`;
-      const closeCronJobId = `close-job-${timestamp}`;
-
-      setValveCronSchedule(openCronExpression, openCronJobId, 'open', createdBy);
-      setValveCronSchedule(closeCronExpression, closeCronJobId, 'close', createdBy);
-
-      const scheduleData = {
-        days,
-        openHour,
-        openMinute,
-        closeHour,
-        closeMinute,
-        openCronExpression,
-        openCronJobId,
-        closeCronExpression,
-        closeCronJobId,
-        createdBy
-      };
-
-      await saveScheduleToDB(scheduleData);
-
-      const schedules = await Schedule.findAll();
-      return res.status(201).json(schedules);
-    } catch (error) {
-      console.error("Error creating schedule:", error);
-      return res.status(500).json({ error: "Wystąpił błąd podczas ustawiania harmonogramu" });
-    }
-  };
+    const schedules = await Schedule.findAll({ where: { deviceId } });
+    res.status(201).json(schedules);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Błąd tworzenia harmonogramu" });
+  }
+};
 
 export const getValveSchedules = async (req, res) => {
-    try {
-        const schedules = await Schedule.findAll();
-        return res.status(200).json(schedules);
-    } catch (error) {
-        console.error('Błąd przy pobieraniu harmonogramów:', error);
-        return res.status(500).json({ message: 'Błąd przy pobieraniu harmonogramów' });
-    }
+  const { deviceId } = req.params;
+  const schedules = await Schedule.findAll({ where: { deviceId } });
+  res.json(schedules);
 };
 
 export const deleteValveSchedule = async (req, res) => {
-    try {
-        const { openCronJobId } = req.params;
-        if (!openCronJobId) {
-            return res.status(400).json({ message: 'Brak ID zadania' });
-        }
-        deleteCronTask(openCronJobId);
-        await Schedule.destroy({
-            where: {
-              openCronJobId: openCronJobId,
-            }
-        });
-
-        const schedules = await Schedule.findAll()
-        return res.status(200).json(schedules);
-    } catch (error) {
-        console.error('Błąd przy pobieraniu harmonogramów:', error);
-        return res.status(500).json({ message: 'Błąd przy pobieraniu harmonogramów' });
-    }
+  const { deviceId, openCronJobId } = req.params;
+  deleteCronTask(openCronJobId);
+  await Schedule.destroy({ where: { deviceId, openCronJobId } });
+  const schedules = await Schedule.findAll({ where: { deviceId } });
+  res.json(schedules);
 };
 
 export const getValveSessions = async (req, res) => {
-  try {
-    const {
-      openDate, closeDate, openedBy, closedBy, method,
-      sortBy, sortOrder,
-      page = 1,
-      limit = 20
-    } = req.query;
+  const { deviceId } = req.params;
+  const {
+    openDate, closeDate, openedBy, closedBy, method,
+    sortBy, sortOrder, page = 1, limit = 20
+  } = req.query;
 
-    const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
-    const perPage  = Math.max(1, parseInt(limit, 10) || 20);
-    const offset   = (pageNum - 1) * perPage;
+  const where = { deviceId };
+  if (openedBy) where.openedBy = openedBy;
+  if (closedBy) where.closedBy = closedBy;
+  if (method)   where.method   = method;
+  if (openDate)  where.openAt  = {
+    [Op.between]: [new Date(`${openDate}T00:00:00`), new Date(`${openDate}T23:59:59.999`)]
+  };
+  if (closeDate) where.closeAt = {
+    [Op.between]: [new Date(`${closeDate}T00:00:00`), new Date(`${closeDate}T23:59:59.999`)]
+  };
 
-    const where = {};
-    if (openedBy) where.openedBy = openedBy;
-    if (closedBy) where.closedBy = closedBy;
-    if (method)   where.method   = method;
+  const valid = ['openAt','closeAt','duration','waterFlow'];
+  const order = valid.includes(sortBy)
+    ? [[sortBy, sortOrder === 'desc' ? 'DESC' : 'ASC']]
+    : [['openAt','DESC']];
 
-    if (openDate) {
-      const start = new Date(`${openDate}T00:00:00`);
-      const end   = new Date(`${openDate}T23:59:59.999`);
-      where.openAt = { [Op.between]: [ start, end ] };
+  const offset = (Math.max(1, +page) - 1) * Math.max(1, +limit);
+  const { count: total, rows: sessions } = await ValveSession.findAndCountAll({
+    where, order, limit: +limit, offset
+  });
+  res.json({
+    sessions,
+    meta: {
+      total,
+      page: +page,
+      perPage: +limit,
+      totalPages: Math.ceil(total / limit)
     }
-    if (closeDate) {
-      const start = new Date(`${closeDate}T00:00:00`);
-      const end   = new Date(`${closeDate}T23:59:59.999`);
-      where.closeAt = { [Op.between]: [ start, end ] };
-    }
-
-    const validFields = ['openAt','closeAt','duration','waterFlow'];
-    const order = [];
-    if (sortBy && validFields.includes(sortBy)) {
-      const dir = (sortOrder||'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
-      order.push([sortBy, dir]);
-    } else {
-      order.push(['openAt','DESC']);
-    }
-
-    const { count: total, rows: sessions } = await ValveSession.findAndCountAll({
-      where,
-      order,
-      limit: perPage,
-      offset
-    });
-
-    const totalPages = Math.ceil(total / perPage);
-
-    return res.json({ sessions, meta: { total, page: pageNum, perPage, totalPages } });
-  } catch (err) {
-    console.error('Error fetching sessions:', err);
-    return res.status(500).json({ error: 'Błąd podczas pobierania sesji zaworu' });
-  }
+  });
 };
 
 export const getValveStats = async (req, res) => {
-  try {
-    const {
-      startDate,
-      endDate,
-      openedBy,
-      method,
-      metric = 'flow',
-      groupBy = 'day'
-    } = req.query;
-
-    const where = {};
-    if (startDate && endDate) {
-      where.openAt = {
-        [Op.between]: [
-          new Date(`${startDate}T00:00:00.000Z`),
-          new Date(`${endDate}T23:59:59.999Z`)
-        ]
-      };
-    }
-    if (openedBy)    where.openedBy = openedBy;
-    if (method)      where.method   = method;
-
-    let group       = [];
-    let attributes  = [];
-
-    if (groupBy === 'day') {
-      attributes.push([fn('DATE', col('openAt')), 'date']);
-      group.push(literal('DATE("openAt")'));
-    }
-    if (groupBy === 'user') {
-      attributes.push('openedBy');
-      group.push('openedBy');
-    }
-    if (groupBy === 'method') {
-      attributes.push('method');
-      group.push('method');
-    }
-    if (groupBy === 'schedule') {
-      attributes.push('scheduleId');
-      group.push('scheduleId');
-    }
-
-    if (metric === 'flow') {
-      attributes.push([fn('SUM', col('waterFlow')), 'totalFlow']);
-    } else {
-      attributes.push([fn('SUM', col('duration')), 'totalDuration']);
-    }
-
-    const logs = await ValveSession.findAll({
-      where,
-      attributes,
-      group,
-      order: groupBy === 'day'
-        ? [[literal('DATE("openAt")'), 'ASC']]
-        : undefined
-    });
-
-    return res.json({ data: logs });
-  } catch (error) {
-    console.error('Error fetching valve logs:', error);
-    return res.status(500).json({ error: 'Błąd podczas pobierania danych' });
+  const { deviceId } = req.params;
+  const { startDate, endDate, openedBy, method, metric='flow', groupBy='day' } = req.query;
+  const where = { deviceId };
+  if (startDate && endDate) {
+    where.openAt = {
+      [Op.between]: [
+        new Date(`${startDate}T00:00:00.000Z`),
+        new Date(`${endDate}T23:59:59.999Z`)
+      ]
+    };
   }
+  if (openedBy) where.openedBy = openedBy;
+  if (method)   where.method   = method;
+
+  const attributes = [], group = [];
+  if (groupBy==='day') {
+    attributes.push([fn('DATE', col('openAt')), 'date']);
+    group.push(literal('DATE("openAt")'));
+  }
+  if (groupBy==='user')   { attributes.push('openedBy'); group.push('openedBy'); }
+  if (groupBy==='method') { attributes.push('method');   group.push('method');   }
+  if (groupBy==='schedule'){ attributes.push('scheduleId'); group.push('scheduleId'); }
+
+  if (metric==='flow') {
+    attributes.push([fn('SUM', col('waterFlow')), 'totalFlow']);
+  } else {
+    attributes.push([fn('SUM', col('duration')), 'totalDuration']);
+  }
+
+  const data = await ValveSession.findAll({
+    where,
+    attributes,
+    group,
+    order: groupBy==='day' ? [[literal('DATE("openAt")'),'ASC']] : undefined
+  });
+
+  res.json({ data });
 };

@@ -8,6 +8,10 @@ const Schedule = sequelize.define('Schedule', {
       autoIncrement: true,
       allowNull: false
   },
+  deviceId: { 
+    type: DataTypes.STRING, 
+    allowNull: false 
+},
   days: {
     type: DataTypes.ARRAY(DataTypes.INTEGER),
     allowNull: false,

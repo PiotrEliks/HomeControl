@@ -26,7 +26,7 @@ app.use(
 );
 
 app.use('/api/auth', authRoutes);
-app.use('/api/valve', valveRoutes);
+app.use('/api/devices', valveRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
