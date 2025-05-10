@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useValveStore } from '../store/useValveStore.js';
+import { useValveStore } from '../store/useValveStore';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 
-const ValveLogs = () => {
+const ValveLogs = ({ deviceId }) => {
   const {
     valveSessions,
     sessionsMeta,
     isGettingValveSessions,
-    getValveSessions
+    getValveSessions,
   } = useValveStore();
+
+    console.log('deviceId', deviceId);
+  console.log('valveSessions', valveSessions);
 
   const [filters, setFilters] = useState({
     openDate: '',
@@ -24,7 +27,7 @@ const ValveLogs = () => {
 
   useEffect(() => {
     fetchPage(1);
-  }, []);
+  }, [deviceId]);
 
   const fetchPage = (page) => {
     const { totalPages } = sessionsMeta;
@@ -35,7 +38,7 @@ const ValveLogs = () => {
       sortOrder,
       limit: sessionsMeta.perPage,
       page
-    });
+    }, deviceId);
   };
 
   const handleSearch = () => {

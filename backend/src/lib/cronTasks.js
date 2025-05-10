@@ -26,8 +26,8 @@ export const setValveCronSchedule = (deviceId, cronExpression, cronJobId, type, 
         socket.emit('command', { command: 'off' });
         let flowBefore;
         await new Promise((resolve, reject) => {
-          socket.once('update', data => {
-            flowBefore = data.extra?.totalFlow ?? null;
+          socket.once('updateState', data => {
+            flowBefore = data.extra?.waterFlow ?? null;
             resolve(data.state);
           });
           setTimeout(() => reject(new Error('Timeout zamykania przed otwarciem')), 5000);
@@ -50,8 +50,8 @@ export const setValveCronSchedule = (deviceId, cronExpression, cronJobId, type, 
 
       let totalFlow = null;
       const newState = await new Promise((resolve, reject) => {
-        socket.once('update', data => {
-          if (command === 'off') totalFlow = data.extra?.totalFlow ?? null;
+        socket.once('updateState', data => {
+          if (command === 'off') totalFlow = data.extra?.waterFlow ?? null;
           resolve(data.state);
         });
         setTimeout(() => reject(new Error('Timeout waiting for update')), 5000);

@@ -3,15 +3,15 @@ import { useValveStore } from '../store/useValveStore.js';
 import { Trash2 } from 'lucide-react';
 import NewScheduleForm from './NewScheduleForm.jsx';
 
-const ValveSchedule = () => {
+const ValveSchedule = ({ deviceId }) => {
   const { schedules, deleteValveSchedule, getValveSchedules, isGettingValveSchedule } = useValveStore();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    getValveSchedules();
-  }, [getValveSchedules]);
+    getValveSchedules(deviceId);
+  }, [getValveSchedules, deviceId]);
 
   const getDayOfWeek = (values) => {
     const daysOfWeek = ['Nd', 'Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'Sb'];
@@ -34,12 +34,13 @@ const ValveSchedule = () => {
       closeHour: schedule.closeHour,
       closeMinute: schedule.closeMinute,
       createdBy: schedule.createdBy,
-      openCronJobId: schedule.openCronJobId
+      openCronJobId: schedule.openCronJobId,
+      deviceId: deviceId
     });
   };
 
   const handleDeleteSchedule = (scheduleId) => {
-    deleteValveSchedule(scheduleId);
+    deleteValveSchedule(scheduleId, deviceId);
     setShowDeleteConfirmation(false);
     setScheduleToDelete(null);
   };
@@ -58,7 +59,7 @@ const ValveSchedule = () => {
 
       <div className="w-full flex justify-center py-3">
         {
-          showForm && <NewScheduleForm onClose={setShowForm}/>
+          showForm && <NewScheduleForm onClose={setShowForm} deviceId={deviceId} />
         }
         {
           !showForm &&

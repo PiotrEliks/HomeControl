@@ -9,19 +9,21 @@ export const turnValveOn = async (req, res) => {
     const { deviceId } = req.params;
     const { fullName } = req.body;
     const socket = getDeviceSocket(deviceId);
+    console.log(deviceId);
     if (!socket) return res.status(404).json({ error: "Urządzenie niepodłączone" });
 
     socket.emit("command", { command: "on" });
     const newState = await new Promise((resolve, reject) => {
-      socket.once("update", data => resolve(data.state));
-      setTimeout(() => reject(new Error("Timeout")), 5000);
+      socket.once("updateState", data => resolve(data.state));
+      //setTimeout(() => reject(new Error("Timeout")), 5000);
     });
 
     await ValveSession.create({
       deviceId,
       openAt:    new Date(),
       openedBy:  fullName,
-      method:    'manual'
+      method:    'manual',
+      deviceId
     });
 
     res.json({ message: "Zawór otworzony", valve: newState });
@@ -41,11 +43,11 @@ export const turnValveOff = async (req, res) => {
     socket.emit("command", { command: "off" });
     let totalFlow;
     const newState = await new Promise((resolve, reject) => {
-      socket.once("update", data => {
-        totalFlow = data.extra?.totalFlow ?? null;
+      socket.once("updateState", data => {
+        totalFlow = data.extra?.waterFlow ?? null;
         resolve(data.state);
       });
-      setTimeout(() => reject(new Error("Timeout")), 5000);
+      //setTimeout(() => reject(new Error("Timeout")), 5000);
     });
 
     const session = await ValveSession.findOne({

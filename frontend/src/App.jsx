@@ -12,7 +12,7 @@ import LightsPage from './pages/LightsPage.jsx';
 import DoorsPage from './pages/DoorsPage.jsx';
 import HomeStatisticsPage from './pages/HomeStatisticsPage.jsx';
 import NoMatchPage from './pages/NoMatchPage.jsx';
-import ValveLogs from './pages/ValveLogs.jsx';
+import ValveLogsPage from './pages/ValveLogsPage.jsx';
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -40,11 +40,11 @@ function App() {
           path="/"
           element={authUser ? <DashboardLayout /> : <Navigate to="/login" />}
         >
-          <Route index element={<Navigate to="/garden-statistics" />} />
-          <Route path="switch" element={<SwitchPage />} />
-          <Route path="schedule" element={<SchedulePage />} />
-          <Route path="garden-statistics" element={<GardenStatisticsPage />} />
-          <Route path="valve-logs" element={<ValveLogs />} />
+          <Route index element={<Navigate to="/garden-statistics/valve-01" />} />
+          <Route path="switch/:deviceId" element={<SwitchPage />} />
+          <Route path="schedule/:deviceId" element={<SchedulePage />} />
+          <Route path="garden-statistics/:deviceId" element={<GardenStatisticsPage />} />
+          <Route path="valve-logs/:deviceId" element={<ValveLogsPage />} />
           <Route path="lights" element={<LightsPage />} />
           <Route path="doors" element={<DoorsPage />} />
           <Route path="home-statistics" element={<HomeStatisticsPage />} />

@@ -3,7 +3,7 @@ import { useValveStore } from '../store/useValveStore.js';
 import { useAuthStore } from '../store/useAuthStore.js';
 import { X } from 'lucide-react';
 
-const NewScheduleForm = ({ onClose }) => {
+const NewScheduleForm = ({ onClose, deviceId }) => {
   const { createValveSchedule } = useValveStore();
   const [selectedDays, setSelectedDays] = useState([]);
   const [openTime, setOpenTime] = useState('');
@@ -43,7 +43,7 @@ const NewScheduleForm = ({ onClose }) => {
     const closeHour = parseInt(closeHourStr, 10) - 2;
     const closeMinute = parseInt(closeMinuteStr, 10);
 
-    await createValveSchedule(selectedDays, openHour, openMinute, closeHour, closeMinute, authUser.fullName);
+    await createValveSchedule(selectedDays, openHour, openMinute, closeHour, closeMinute, authUser.fullName, deviceId);
 
     setSelectedDays([]);
     setOpenTime('');

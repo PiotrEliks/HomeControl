@@ -31,9 +31,10 @@ export function initSocket(server) {
       }
     });
 
-    socket.on("update", ({ state, extra }) => {
+    socket.on("updateState", ({ state, extra }) => {
       if (!socket.deviceId) return;
-      deviceStates.set(socket.deviceId, { state, extra, updatedAt: Date.now() });
+      console.log(`📡 Device ${socket.deviceType}[${socket.deviceId}] state:`, state, extra);
+      deviceStates.set(socket.deviceId, { state, extra });
       ioClients.forEach(c => c.emit("state", { deviceId: socket.deviceId, state, extra }));
     });
 
