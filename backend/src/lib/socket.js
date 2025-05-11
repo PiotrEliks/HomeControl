@@ -27,6 +27,7 @@ export function initSocket(server) {
       }
       else if (role === "frontend") {
         ioClients.add(socket);
+        console.log(`📱 Frontend client connected`);
         socket.emit("devices", Array.from(deviceSockets.keys()));
       }
     });
@@ -35,11 +36,13 @@ export function initSocket(server) {
       if (!socket.deviceId) return;
       console.log(`📡 Device ${socket.deviceType}[${socket.deviceId}] state:`, state, extra);
       deviceStates.set(socket.deviceId, { state, extra });
+      console.log("Device states:", deviceStates);
       ioClients.forEach(c => c.emit("state", { deviceId: socket.deviceId, state, extra }));
     });
 
     socket.on("disconnect", () => {
       if (socket.deviceId) {
+        console.log(`❌ Device ${socket.deviceType}[${socket.deviceId}] disconnected`);
         deviceSockets.delete(socket.deviceId);
         deviceStates.delete(socket.deviceId);
         ioClients.forEach(c => c.emit("state", {
@@ -48,6 +51,7 @@ export function initSocket(server) {
         }));
       }
       ioClients.delete(socket);
+      console.log(`❌ Frontend client disconnected`);
     });
 
     socket.on("command", ({ deviceId, command }) => {

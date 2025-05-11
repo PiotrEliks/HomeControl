@@ -55,6 +55,7 @@ export const useValveStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/devices/${deviceId}/state`);
       set({ valveState: res.data.valve });
+      console.log(res)
     } catch (error) {
       console.error('Error in getValveState:', error);
       toast.error(error.response?.data?.error || 'Błąd przy pobieraniu stanu zaworu');
@@ -82,6 +83,7 @@ export const useValveStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(`/devices/${deviceId}/off`, { fullName });
       set({ valveState: res.data.valve });
+      console.log(res)
       toast.success('Wyłączono zawór');
     } catch (error) {
       console.error('Error setting valve off:', error);

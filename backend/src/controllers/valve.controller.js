@@ -12,12 +12,13 @@ export const turnValveOn = async (req, res) => {
     console.log(deviceId);
     if (!socket) return res.status(404).json({ error: "Urządzenie niepodłączone" });
 
-    socket.emit("command", { command: "on" });
-    const newState = await new Promise((resolve, reject) => {
+    const response = new Promise((resolve, reject) => {
       socket.once("updateState", data => resolve(data.state));
-      //setTimeout(() => reject(new Error("Timeout")), 5000);
+      setTimeout(() => reject(new Error("Timeout")), 5000);
     });
-
+    socket.emit("command", { command: "on" });
+    const newState = await response;
+    console.log("NEW STATE ON",newState)
     await ValveSession.create({
       deviceId,
       openAt:    new Date(),
@@ -26,7 +27,7 @@ export const turnValveOn = async (req, res) => {
       deviceId
     });
 
-    res.json({ message: "Zawór otworzony", valve: newState });
+    res.json({ message: "Zawór otworzony", valve: { state: newState } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Błąd włączania" });
@@ -40,15 +41,17 @@ export const turnValveOff = async (req, res) => {
     const socket = getDeviceSocket(deviceId);
     if (!socket) return res.status(404).json({ error: "Urządzenie niepodłączone" });
 
-    socket.emit("command", { command: "off" });
-    let totalFlow;
-    const newState = await new Promise((resolve, reject) => {
+    let totalFlow = 0.0;
+    const response = new Promise((resolve, reject) => {
       socket.once("updateState", data => {
         totalFlow = data.extra?.waterFlow ?? null;
         resolve(data.state);
       });
-      //setTimeout(() => reject(new Error("Timeout")), 5000);
+      setTimeout(() => reject(new Error("Timeout")), 5000);
     });
+    socket.emit("command", { command: "off" });
+    const newState = await response;
+    console.log("NEW STATE OFF",newState)
 
     const session = await ValveSession.findOne({
       where: { deviceId, closeAt: null },
@@ -67,7 +70,7 @@ export const turnValveOff = async (req, res) => {
       waterFlow: totalFlow
     });
 
-    res.json({ message: "Zawór zamknięty", valve: newState });
+    res.json({ message: "Zawór zamknięty", valve: { state: newState, extra: { waterFlow: totalFlow} } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Błąd wyłączania" });
@@ -77,6 +80,7 @@ export const turnValveOff = async (req, res) => {
 export const getValveStateController = (req, res) => {
   const { deviceId } = req.params;
   const valve = getValveState(deviceId);
+  console.log("GET VALVE STATE",valve)
   res.json({ deviceId, valve });
 };
 

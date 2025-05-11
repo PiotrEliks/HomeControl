@@ -46,22 +46,24 @@ export const setValveCronSchedule = (deviceId, cronExpression, cronJobId, type, 
 
       const command = type === 'open' ? 'on' : 'off';
       console.log(`Cron [${cronJobId}] wysyła komendę ${command} do ${deviceId}`);
-      socket.emit('command', { command });
-
+      
       let totalFlow = null;
-      const newState = await new Promise((resolve, reject) => {
+      const response = new Promise((resolve, reject) => {
         socket.once('updateState', data => {
           if (command === 'off') totalFlow = data.extra?.waterFlow ?? null;
           resolve(data.state);
         });
         setTimeout(() => reject(new Error('Timeout waiting for update')), 5000);
       });
+      socket.emit('command', { command });
+      const newState = await response;
       console.log(`Cron [${cronJobId}] zakończony. Nowy stan: ${newState}`);
+      console.log(newState)
 
-      if (type === 'open' && newState === 'on') {
+      if (type === 'open' && newState) {
         await ValveSession.create({ deviceId, openAt: new Date(), openedBy: createdBy, method: 'schedule' });
       }
-      if (type === 'close' && newState === 'off') {
+      if (type === 'close' && !newState) {
         const session = await ValveSession.findOne({
           where: { deviceId, closeAt: null, method: 'schedule' },
           order: [['openAt', 'DESC']]

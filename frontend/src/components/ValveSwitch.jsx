@@ -26,8 +26,11 @@ const ValveSwitch = ({ deviceId }) => {
   useEffect(() => {
     if (!socket) return;
     const handleState = ({ deviceId: id, state, extra }) => {
+      console.log('Socket state update:', { id, state, extra });
       if (id !== deviceId) return;
-      useValveStore.setState({ valveState: {state, extra} });
+      useValveStore.setState({ valveState: {state, extra } });
+      const valveState = useValveStore.getState().valveState;
+      console.log(valveState)
       if (extra?.waterFlow != null) {
         setWaterConsumption(extra.waterFlow);
       }
@@ -60,7 +63,11 @@ const ValveSwitch = ({ deviceId }) => {
     return `${f.endsWith('.00') ? Math.trunc(v) : f} ${getLitrForm(v)}`;
   }
 
-  if (state.state === undefined || state.state === null || state.state === 'unknown' && !isChangingValveState) {
+  console.log(state)
+
+  if ((state.state === undefined || state.state === null || state.state === 'unknown') && !isChangingValveState) {
+    console.log(state)
+    console.log(state.state, isChangingValveState)
     return (
       <Card className="max-w-sm mx-auto p-4 rounded-2xl shadow-md">
         <CardContent className="flex flex-col items-center space-y-4">
