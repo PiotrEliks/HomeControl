@@ -87,7 +87,7 @@ const ValveCharts = ({ deviceId }) => {
   } else {
     const key = groupBy === 'user' ? 'openedBy' : 'method'
     chartData = valveLogs.map(item => ({
-      x: item[key],
+      x: item[key] === 'manual' ? 'Ręcznie' : item[key] === 'schedule' ? 'Harmonogram' : item[key],
       y: metric === 'flow'
         ? Number(item.totalFlow)
         : Number(item.totalDuration)
@@ -126,8 +126,8 @@ const ValveCharts = ({ deviceId }) => {
             onChange={e => setMetric(e.target.value)}
             className="mt-1 p-1 border rounded"
           >
-            <option value="flow">Suma przepływu (litrów)</option>
-            <option value="duration">Suma czasu (sekundy)</option>
+            <option value="flow">Suma przepływu</option>
+            <option value="duration">Suma czasu</option>
           </select>
         </label>
 

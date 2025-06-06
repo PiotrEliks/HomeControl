@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useValveStore } from '../store/useValveStore';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, X,CalendarDays, Hand } from 'lucide-react';
 
 const ValveLogs = ({ deviceId }) => {
   const {
@@ -175,47 +175,51 @@ const ValveLogs = ({ deviceId }) => {
           </div>
       }
 
-
-      {isGettingValveSessions ? (
-        <p>Ładuję...</p>
-      ) : (
-        <div className="overflow-x-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr] font-bold text-sm text-center items-center border bg-gray-200">
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Otwarcie</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Zamknięcie</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Czas trwania</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Ilość wody</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Otwarte przez</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0">Zamknięte przez</div>
-            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-b-zinc-400  lg:border-b-0">Metoda</div>
-          </div>
-          {valveSessions?.map((sess) => (
-            <div key={sess.id} className="border-b border-l grid grid-cols-1 lg:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr] text-sm text-center items-center">
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-                {new Date(sess.openAt).toLocaleString('pl-PL')}
-              </div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-                {sess.closeAt
-                  ? new Date(sess.closeAt).toLocaleString('pl-PL')
-                  : '—'}
-              </div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-                {sess.duration
-                  ? formatDuration(sess.duration)
-                  : '—'}
-              </div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">
-                {sess.waterFlow
-                  ? sess.waterFlow + ' l'
-                  : '—'}
-              </div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{sess.openedBy}</div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r border-b border-b-zinc-400 lg:border-r-1 lg:border-b-0 lg:border-black">{sess.closedBy ?? '—'}</div>
-              <div className="h-full flex items-center justify-center px-2 py-1 border-r">{sess.method === 'manual' ? 'Ręcznie' : 'Harmonogram'}</div>
-            </div>
-          ))}
+      <div className="overflow-x-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] font-bold text-sm text-center items-center border bg-gray-200">
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Otwarcie</div>
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Zamknięcie</div>
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Czas trwania</div>
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Ilość wody</div>
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Otwarte przez</div>
+          <div className="h-full flex items-center justify-center px-2 py-1 border-b lg:border-r-1 lg:border-b-0 border-black">Zamknięte przez</div>
+          <div className="h-full flex items-center justify-center px-2 py-1">Metoda</div>
         </div>
-      )}
+
+        {valveSessions?.length === 0 && !isGettingValveSessions && (
+          <div className="w-full flex justify-center py-3 text-sm text-gray-800 border border-zinc-600">Brak harmonogramów</div>
+        )}
+
+        {isGettingValveSessions && valveSessions?.length == 0 && (
+          <div className="w-full flex justify-center py-3 text-sm text-gray-800 border border-zinc-600">Ładowanie harmonogramów...</div>
+        )}
+
+        {valveSessions?.map((sess) => (
+          <div key={sess.id} className="border-b border-l border-r border-black grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] text-sm text-center items-center">
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">
+              {new Date(sess.openAt).toLocaleString('pl-PL')}
+            </div>
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">
+              {sess.closeAt
+                ? new Date(sess.closeAt).toLocaleString('pl-PL')
+                : '—'}
+            </div>
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">
+              {sess.duration
+                ? formatDuration(sess.duration)
+                : '—'}
+            </div>
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">
+              {sess.waterFlow
+                ? sess.waterFlow + ' l'
+                : '—'}
+            </div>
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">{sess.openedBy}</div>
+            <div className="h-full flex items-center justify-center px-2 py-1 border-b border-zinc-600 lg:border-b-0 lg:border-r">{sess.closedBy ?? '—'}</div>
+            <div className="h-full flex items-center justify-center px-2 py-0.5">{sess.method === 'manual' ? <span><Hand /></span> : <span><CalendarDays /></span>}</div>
+          </div>
+        ))}
+      </div>
 
       {valveSessions.length === 0 && !isGettingValveSessions && (
         <div className="text-center mt-4">Brak danych</div>
