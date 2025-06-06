@@ -8,6 +8,7 @@ import { initSocket } from './lib/socket.js';
 import authRoutes from './routes/auth.route.js';
 import valveRoutes from './routes/valve.route.js';
 import { connectDB } from './lib/db.js';
+import sequelize from './lib/db.js';
 import { loadSchedulesFromDB } from './lib/cronTasks.js';
 
 dotenv.config();
@@ -19,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   })
@@ -39,8 +40,9 @@ const server = http.createServer(app);
 
 initSocket(server);
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log("Server is running on port:", PORT);
   connectDB();
+  await sequelize.sync();
   loadSchedulesFromDB();
 });
